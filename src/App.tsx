@@ -5,10 +5,10 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 let DefaultIcon = L.icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
@@ -43,7 +43,6 @@ import {
 
 // --- Types & Database ---
 
-// Custom Marker Icon
 const customMarkerIcon = L.divIcon({
   className: 'custom-pin',
   html: `
@@ -231,7 +230,8 @@ const evDatabase: Record<string, EVModel[]> = {
     { name: "Sakura", capacities: [20] }
   ],
   "Toyota": [
-    { name: "bZ4X", capacities: [71.4, 72.8] }
+    { name: "bZ4X", capacities: [71.4, 72.8] },
+    { name: "Prius Prime", capacities: [13.6] }
   ],
   "Subaru": [
     { name: "Solterra", capacities: [71.4, 72.8] }
@@ -529,7 +529,6 @@ const BackButton = ({ onClick }: { onClick: () => void }) => (
   </button>
 );
 
-// Custom User Location Icon (Blue Dot)
 const userLocationIcon = L.divIcon({
   className: 'user-location-dot',
   html: `
@@ -542,19 +541,25 @@ const userLocationIcon = L.divIcon({
   iconAnchor: [10, 10]
 });
 
-// Map Events Component (Handle Drag)
-const MapEvents = ({ onMoveEnd }: { onMoveEnd: (lat: number, lng: number) => void }) => {
+// UPATED: Map Events Component (Now senses dragging and tapping)
+const MapEvents = ({ onMoveEnd, setIsDraggingMap }: { onMoveEnd: (lat: number, lng: number) => void, setIsDraggingMap: (is: boolean) => void }) => {
   const map = useMapEvents({
+    movestart: () => setIsDraggingMap(true),
     moveend: () => {
+      setIsDraggingMap(false);
       const center = map.getCenter();
       onMoveEnd(center.lat, center.lng);
+    },
+    click: (e) => {
+      // Allows user to just tap the screen to drop the pin
+      map.flyTo(e.latlng, map.getZoom(), { animate: true, duration: 0.5 });
     }
   });
   return null;
 };
 
-// Map Controls Component (GPS Snap)
-const MapControls = ({ userLocation }: { userLocation: { lat: number, lng: number } | null }) => {
+// UPDATED: Map Controls Component (GPS Snap Button now floats intelligently)
+const MapControls = ({ userLocation, isDraggingMap }: { userLocation: { lat: number, lng: number } | null, isDraggingMap: boolean }) => {
   const map = useMapEvents({});
 
   const handleSnap = (e: React.MouseEvent) => {
@@ -565,24 +570,22 @@ const MapControls = ({ userLocation }: { userLocation: { lat: number, lng: numbe
         duration: 1.5
       });
     } else {
-      // Fallback if no user location yet
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
-        map.flyTo([latitude, longitude], 16, {
-          animate: true,
-          duration: 1.5
-        });
+        map.flyTo([latitude, longitude], 16, { animate: true, duration: 1.5 });
       });
     }
   };
 
   return (
-    <button 
-      onClick={handleSnap}
-      className="absolute bottom-8 right-4 bg-white p-3 rounded-full shadow-xl z-[400] text-[#1C1C1E] active:scale-90 transition-transform border border-gray-100"
-    >
-      <Crosshair size={24} className="text-[#1C1C1E]" />
-    </button>
+    <div className={`absolute right-4 transition-all duration-300 ease-in-out z-[400] ${isDraggingMap ? 'bottom-8' : 'bottom-[48vh]'}`}>
+      <button 
+        onClick={handleSnap}
+        className="bg-white p-3 rounded-full shadow-xl text-[#1C1C1E] active:scale-90 transition-transform border border-gray-100"
+      >
+        <Crosshair size={24} className="text-[#1C1C1E]" />
+      </button>
+    </div>
   );
 };
 
@@ -601,10 +604,13 @@ export default function App() {
   const [locationLabel, setLocationLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
   const [locationNotes, setLocationNotes] = useState('');
   
+  // NEW STATE: Tracks when the map is moving
+  const [isDraggingMap, setIsDraggingMap] = useState(false);
+  
   // Location Coordinates State
   const [locationMode, setLocationMode] = useState<'gps' | 'map'>('gps');
-  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null); // Order Location (Center Pin)
-  const [userGPSLocation, setUserGPSLocation] = useState<{ lat: number; lng: number } | null>(null); // Live User Location (Blue Dot)
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null); 
+  const [userGPSLocation, setUserGPSLocation] = useState<{ lat: number; lng: number } | null>(null); 
   const [isLocating, setIsLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState<'idle' | 'locating' | 'success' | 'error'>('idle');
 
@@ -620,7 +626,6 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState<string>('Today');
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  // Vehicle Sheet State
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetStep, setSheetStep] = useState<'brand' | 'model' | 'capacity'>('brand');
   const [searchTerm, setSearchTerm] = useState('');
@@ -628,12 +633,11 @@ export default function App() {
   const scrollRef = useRef<HTMLElement>(null);
   const { scrollY } = useScroll({ container: scrollRef });
   
-  // Header Animations
   const headerBackground = useTransform(scrollY, [0, 50], ["rgba(255,255,255,0)", "rgba(255,255,255,0.8)"]);
   const headerShadow = useTransform(scrollY, [0, 50], ["none", "0 4px 30px rgba(0,0,0,0.03)"]);
-  const headerPadding = useTransform(scrollY, [0, 50], ["3rem", "1rem"]); // pt-12 to pt-4
+  const headerPadding = useTransform(scrollY, [0, 50], ["3rem", "1rem"]); 
   const logoScale = useTransform(scrollY, [0, 50], [1, 0.7]);
-  const logoX = useTransform(scrollY, [0, 50], ["0%", "-35%"]); // Center to Left-ish adjustment
+  const logoX = useTransform(scrollY, [0, 50], ["0%", "-35%"]);
 
   const maxSliderValue = energyMode === 'percent' ? 85 : 150;
   const minSliderValue = 10;
@@ -642,53 +646,22 @@ export default function App() {
     ? energyValue * PRICE_PER_KWH 
     : Math.round((energyValue / 100) * batteryCapacity * PRICE_PER_KWH);
 
-  const handleGetLocation = () => {
-    setIsLocating(true);
-    setLocationStatus('locating');
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocationCoords({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          setLocationStatus('success');
-          setIsLocating(false);
-          setLocation('Current Location (GPS)');
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setLocationStatus('error');
-          setIsLocating(false);
-        }
-      );
-    } else {
-      setLocationStatus('error');
-      setIsLocating(false);
-    }
-  };
-
-  // Splash Screen Timer
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsAppReady(true);
-    }, 2500); // 2.5 seconds total
+    }, 2500); 
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-locate and Watch Position on mount
   useEffect(() => {
     if (step === 2) {
       setIsLocating(true);
       if (navigator.geolocation) {
-        // Initial Fix
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
             const coords = { lat: latitude, lng: longitude };
             setUserGPSLocation(coords);
-            
-            // Only center map if we haven't set a location yet
             if (!locationCoords) {
               setLocationCoords(coords);
             }
@@ -700,7 +673,6 @@ export default function App() {
           }
         );
 
-        // Watch Position
         const watchId = navigator.geolocation.watchPosition(
           (position) => {
             setUserGPSLocation({
@@ -722,7 +694,6 @@ export default function App() {
     const model = selectedModel || '[Model]';
     const capacity = selectedCapacity || DEFAULT_BATTERY_KWH;
     
-    // Calculate energy in kWh for the message
     const energyInKwh = energyMode === 'percent' 
       ? Math.round((energyValue / 100) * capacity) 
       : energyValue;
@@ -731,12 +702,10 @@ export default function App() {
       ? `${energyValue}% (${energyInKwh} kWh)` 
       : `${energyValue} kWh`;
 
-    // Construct Google Maps Link
     const mapsLink = locationCoords 
       ? `https://www.google.com/maps?q=${locationCoords.lat},${locationCoords.lng}`
       : 'Location not provided';
 
-    // Webhook Payload
     const payload = {
       timestamp: new Date().toISOString(),
       location_coordinates: locationCoords,
@@ -749,7 +718,6 @@ export default function App() {
       reason: chargeReason
     };
 
-    // Fire Webhook (Fire & Forget logic, but we await to ensure execution started)
     try {
       fetch('/api/submit-order', {
         method: 'POST',
@@ -777,7 +745,6 @@ export default function App() {
     window.open(`https://wa.me/212666126924?text=${encodedMsg}`, '_blank');
   };
 
-  // Helper to open vehicle sheet
   const openVehicleSheet = () => {
     setSheetStep('brand');
     setSearchTerm('');
@@ -786,7 +753,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full bg-[#f0f0f0] flex justify-center font-sans selection:bg-[#B5F573] selection:text-[#1C1C1E]">
-      <div className="flex flex-col h-[100dvh] w-full max-w-[430px] bg-[#FFFFFF] text-[#1C1C1E] relative shadow-2xl overflow-hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      {/* UPDATED: Removed max-w-[430px] to allow full-screen on Z-Fold */}
+      <div className="flex flex-col h-[100dvh] w-full bg-[#FFFFFF] text-[#1C1C1E] relative shadow-2xl overflow-hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         
         {/* Splash Screen Overlay */}
         <AnimatePresence>
@@ -799,7 +767,7 @@ export default function App() {
             >
               <motion.div
                 initial={{ scale: 1.5, y: 0 }}
-                exit={{ scale: 0.7, y: -window.innerHeight / 2 + 60 }} // Approximate header position
+                exit={{ scale: 0.7, y: -window.innerHeight / 2 + 60 }} 
                 transition={{ duration: 1, delay: 1.5, ease: "easeInOut" }}
               >
                 <FstLogo />
@@ -808,7 +776,7 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* Sticky Header - Hide on Map Step */}
+        {/* Sticky Header */}
         {step !== 2 && (
           <motion.header 
             style={{ 
@@ -853,7 +821,6 @@ export default function App() {
           </motion.header>
         )}
 
-        {/* Main Content Area */}
         <main ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-32 pt-4 scroll-smooth scrollbar-hide">
           <AnimatePresence mode="wait">
             
@@ -864,7 +831,7 @@ export default function App() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-8 pt-4"
+                className="space-y-8 pt-4 md:max-w-2xl md:mx-auto"
               >
                 <div>
                   <h1 className="text-3xl font-black text-[#1C1C1E] tracking-tight">{t.welcome}</h1>
@@ -922,7 +889,7 @@ export default function App() {
               </motion.div>
             )}
 
-            {/* STEP 2: LOCATION DETAILS (UPDATED - SPLIT VIEW) */}
+            {/* STEP 2: LOCATION DETAILS */}
             {step === 2 && (
               <motion.div 
                 key="step2"
@@ -931,10 +898,10 @@ export default function App() {
                 exit={{ opacity: 0 }}
                 className="absolute inset-0 flex flex-col"
               >
-                {/* Top Map Area (55vh) */}
-                <div className="relative w-full h-[55vh] z-0">
-                  {/* Branding Overlay */}
-                  <div className="absolute top-6 left-6 z-[500] bg-white/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/40 shadow-sm">
+                {/* Top Map Area */}
+                <div className="relative w-full h-full z-0">
+                  <div className="absolute top-6 left-6 z-[500] bg-white/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/40 shadow-sm flex items-center gap-3">
+                    <BackButton onClick={() => setStep(1)} />
                     <FstLogo small />
                   </div>
 
@@ -945,29 +912,32 @@ export default function App() {
                     zoomControl={false}
                   >
                     <TileLayer
-                      attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+                      attribution='© <a href="https://carto.com/attributions">CARTO</a>'
                       url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                     />
                     
-                    {/* Live User GPS Dot */}
                     {userGPSLocation && (
                       <Marker position={[userGPSLocation.lat, userGPSLocation.lng]} icon={userLocationIcon} />
                     )}
 
-                    <MapEvents onMoveEnd={(lat, lng) => setLocationCoords({ lat, lng })} />
-                    <MapControls userLocation={userGPSLocation} />
+                    {/* UPDATED: Pass dragging state */}
+                    <MapEvents 
+                      onMoveEnd={(lat, lng) => setLocationCoords({ lat, lng })} 
+                      setIsDraggingMap={setIsDraggingMap} 
+                    />
+                    
+                    {/* UPDATED: Smart Floating Map Controls */}
+                    <MapControls userLocation={userGPSLocation} isDraggingMap={isDraggingMap} />
                   </MapContainer>
 
-                  {/* Fixed Center Pin (Order Location) */}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full z-[450] pointer-events-none">
-                    <div className="relative flex items-center justify-center">
-                      <div className="w-4 h-4 bg-[#B5F573] rounded-full border-[2.5px] border-white shadow-[0_0_20px_rgba(181,245,115,0.8)] z-10"></div>
+                    <div className="relative flex items-center justify-center transition-transform">
+                      <div className={`w-4 h-4 bg-[#B5F573] rounded-full border-[2.5px] border-white shadow-[0_0_20px_rgba(181,245,115,0.8)] z-10 transition-all ${isDraggingMap ? 'scale-125' : 'scale-100'}`}></div>
                       <div className="absolute w-1 h-8 bg-black/80 rounded-full top-3 left-1/2 -translate-x-1/2 -z-10"></div>
-                      <div className="absolute w-12 h-12 bg-[#B5F573] rounded-full animate-ping opacity-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+                      {!isDraggingMap && <div className="absolute w-12 h-12 bg-[#B5F573] rounded-full animate-ping opacity-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>}
                     </div>
                   </div>
 
-                  {/* Loading Overlay */}
                   {isLocating && (
                     <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-[600] flex items-center justify-center">
                       <div className="flex flex-col items-center gap-3">
@@ -978,8 +948,13 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Bottom Sheet Controls (45vh) */}
-                <div className="absolute bottom-0 w-full h-[45vh] bg-white rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-10 flex flex-col overflow-hidden">
+                {/* UPDATED: Smart Sliding Bottom Sheet */}
+                <motion.div 
+                  initial={{ y: '100%' }}
+                  animate={{ y: isDraggingMap ? '100%' : '0%' }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="absolute bottom-0 w-full h-[45vh] bg-white rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-[500] flex flex-col overflow-hidden md:max-w-2xl md:left-1/2 md:-translate-x-1/2"
+                >
                   <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-3 mb-2 shrink-0" />
                   
                   <div className="flex-1 overflow-y-auto px-6 pb-24 pt-2 space-y-6">
@@ -1023,7 +998,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Floating Action Button inside Bottom Sheet */}
                   <div className="absolute bottom-0 left-0 w-full p-6 bg-white/90 backdrop-blur border-t border-gray-100">
                     <motion.button
                       whileTap={{ scale: 0.96 }}
@@ -1036,7 +1010,7 @@ export default function App() {
                       {t.confirmLocation}
                     </motion.button>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             )}
 
@@ -1047,9 +1021,8 @@ export default function App() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-6 md:max-w-2xl md:mx-auto"
               >
-                {/* Vehicle Selector (Reused) */}
                 <section className="space-y-2">
                   <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93] ml-1">{t.vehicle}</h2>
                   <button 
@@ -1072,7 +1045,6 @@ export default function App() {
                   </button>
                 </section>
 
-                {/* Energy Slider (Reused & Enhanced) */}
                 <section className="space-y-4">
                   <div className="flex justify-between items-center ml-1">
                     <h2 className="text-xs font-bold uppercase tracking-widest text-[#8E8E93]">{t.amount}</h2>
@@ -1097,7 +1069,6 @@ export default function App() {
                   </div>
                   
                   <div className="bg-[#F5F5F7] rounded-3xl p-8 flex flex-col items-center gap-8 relative overflow-hidden border border-white/50 shadow-sm">
-                    {/* Background Glow */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-[#B5F573]/20 blur-3xl rounded-full pointer-events-none"></div>
 
                     <div className="flex items-baseline gap-1 relative z-10">
@@ -1108,7 +1079,6 @@ export default function App() {
                     </div>
 
                     <div className="w-full relative px-2 py-4">
-                      {/* Visual Ticks */}
                       <div className="absolute top-1/2 -translate-y-1/2 left-2 right-2 h-full pointer-events-none flex justify-between items-center z-0 px-1">
                         {Array.from({ length: Math.floor((maxSliderValue - minSliderValue) / 5) + 1 }).map((_, i) => {
                           const val = minSliderValue + (i * 5);
@@ -1126,7 +1096,6 @@ export default function App() {
                         })}
                       </div>
 
-                      {/* Active Track with Glow */}
                       <div 
                         className="absolute top-1/2 -translate-y-1/2 left-2 h-[16px] bg-[#B5F573] rounded-full pointer-events-none z-0 transition-all duration-75 ease-out shadow-[0_0_15px_rgba(181,245,115,0.5)]"
                         style={{ width: `calc(${((energyValue - minSliderValue) / (maxSliderValue - minSliderValue)) * 100}% - 16px)` }}
@@ -1192,7 +1161,7 @@ export default function App() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-6 md:max-w-2xl md:mx-auto"
               >
                 <div className="space-y-4">
                   <h3 className="font-bold text-[#1C1C1E]">{t.selectDate}</h3>
@@ -1245,7 +1214,7 @@ export default function App() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-6 md:max-w-2xl md:mx-auto"
               >
                 <div className="bg-[#F5F5F7] rounded-3xl p-6 space-y-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-[#B5F573]/20 rounded-full blur-3xl -mr-10 -mt-10"></div>
@@ -1307,7 +1276,7 @@ export default function App() {
           </AnimatePresence>
         </main>
 
-        {/* Bottom Action Button - Hide on Map Step */}
+        {/* Bottom Action Button */}
         {step !== 2 && (
           <footer className="absolute bottom-0 left-0 w-full px-6 pb-10 pt-4 bg-white/80 backdrop-blur-xl border-t border-[#F5F5F7] z-40">
             {step === 3 && (
@@ -1320,7 +1289,7 @@ export default function App() {
                   }
                   setStep(4);
                 }}
-                className="w-full bg-[#1C1C1E] text-white font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg"
+                className="w-full md:max-w-2xl md:mx-auto bg-[#1C1C1E] text-white font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg block"
               >
                 {t.nextStep}
               </motion.button>
@@ -1331,7 +1300,7 @@ export default function App() {
                 whileTap={{ scale: 0.96 }}
                 onClick={() => setStep(5)}
                 disabled={!selectedTime}
-                className={`w-full font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all ${
+                className={`w-full md:max-w-2xl md:mx-auto font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all block ${
                   selectedTime ? 'bg-[#1C1C1E] text-white' : 'bg-[#F5F5F7] text-[#8E8E93]'
                 }`}
               >
@@ -1344,7 +1313,7 @@ export default function App() {
                 whileTap={{ scale: 0.96 }}
                 onClick={handleConfirm}
                 disabled={!locationCoords}
-                className={`w-full font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(181,245,115,0.4)] transition-all ${
+                className={`w-full md:max-w-2xl md:mx-auto font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(181,245,115,0.4)] transition-all block ${
                   locationCoords ? 'bg-[#B5F573] text-[#1C1C1E]' : 'bg-[#F5F5F7] text-[#8E8E93]'
                 }`}
               >
@@ -1355,7 +1324,7 @@ export default function App() {
           </footer>
         )}
 
-        {/* Vehicle Bottom Sheet (Reused) */}
+        {/* Vehicle Bottom Sheet */}
         <AnimatePresence>
           {isSheetOpen && (
             <>
@@ -1371,7 +1340,7 @@ export default function App() {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="absolute bottom-0 left-0 w-full h-[80%] bg-white rounded-t-3xl z-50 flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+                className="absolute bottom-0 left-0 w-full md:max-w-2xl md:left-1/2 md:-translate-x-1/2 h-[80%] bg-white rounded-t-3xl z-50 flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
               >
                 <div className="flex justify-between items-center p-6 border-b border-[#F5F5F7]">
                   {sheetStep !== 'brand' ? (
@@ -1392,7 +1361,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Search Bar */}
                 {(sheetStep === 'brand' || sheetStep === 'model') && (
                   <div className="px-6 pt-4 pb-2">
                     <div className="relative group">
@@ -1493,7 +1461,7 @@ export default function App() {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="absolute top-0 right-0 w-[85%] h-full bg-[#F5F5F7]/95 backdrop-blur-3xl z-50 flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.1)] border-l border-white/50"
+                className="absolute top-0 right-0 w-[85%] md:w-[400px] h-full bg-[#F5F5F7]/95 backdrop-blur-3xl z-50 flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.1)] border-l border-white/50"
               >
                 <div className="pt-14 pb-6 px-6 flex justify-between items-center border-b border-[#1C1C1E]/5">
                   <h2 className="text-xl font-black tracking-tight text-[#1C1C1E]">{t.settings}</h2>
@@ -1503,7 +1471,6 @@ export default function App() {
                 </div>
                 
                 <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-                  {/* Profile Card */}
                   <div className="bg-white rounded-2xl p-4 flex items-center gap-4 ios-shadow border border-white/60">
                     <div className="w-12 h-12 rounded-full bg-[#B5F573]/20 flex items-center justify-center">
                       <User size={24} className="text-[#1C1C1E]" />
@@ -1514,7 +1481,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Menu Items */}
                   <div className="bg-white rounded-2xl ios-shadow border border-white/60 overflow-hidden">
                     {[
                       { icon: Zap, label: t.ourTech },
