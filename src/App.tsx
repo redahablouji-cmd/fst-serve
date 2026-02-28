@@ -620,7 +620,8 @@ export default function App() {
       alert("📲 To install FST SERVE:\n\niPhone: Tap the Share icon at the bottom and select 'Add to Home Screen'.\n\nSafari/Chrome: Tap the menu and select 'Add to Home screen'.");
     }
   };
-  // -------------------------nst [language, setLanguage] = useState<Language>('en');
+ // -------------------------
+  const [language, setLanguage] = useState<Language>('en');
   const t = translations[language];
 
   const [step, setStep] = useState<number>(1);
