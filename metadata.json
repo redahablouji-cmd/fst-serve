@@ -1,0 +1,7 @@
+{
+  "name": "FST EV Charging",
+  "description": "Premium on-demand EV charging service. Fast, reliable, and futuristic.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
