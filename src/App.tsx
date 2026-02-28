@@ -595,7 +595,7 @@ const MapControls = ({ userLocation, isDraggingMap }: { userLocation: { lat: num
 export default function App() {
   const [isAppReady, setIsAppReady] = useState(false);
   
-  // --- PWA Install Logic ---
+// --- PWA Install Logic ---
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
