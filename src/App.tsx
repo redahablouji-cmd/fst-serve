@@ -14,6 +14,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 import { 
+  Smartphone,
   ChevronRight, 
   X,
   MapPin,
@@ -859,7 +860,24 @@ export default function App() {
                     {t.useCurrentLocation}
                   </button>
                 </div>
-
+{/* 📲 Download App Banner */}
+        <button
+          onClick={() => alert("📲 To install FST SERVE:\n\niPhone: Tap the Share icon at the bottom and select 'Add to Home Screen'.\n\nAndroid: Tap the 3 dots at the top right and select 'Install App' or 'Add to Home screen'.")}
+          className="w-full bg-[#1C1C1E] rounded-2xl p-4 flex items-center justify-between shadow-[0_8px_30px_rgba(0,0,0,0.12)] active:scale-[0.98] transition-transform border border-white/10"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#B5F573]/20 flex items-center justify-center">
+              <Smartphone size={20} className="text-[#B5F573]" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-white font-bold text-sm">Download FST SERVE</h3>
+              <p className="text-[#8E8E93] text-xs">Add to your home screen</p>
+            </div>
+          </div>
+          <div className="bg-[#B5F573] text-[#1C1C1E] text-xs font-black px-4 py-2 rounded-full shadow-sm">
+            INSTALL
+          </div>
+        </button>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-bold text-[#1C1C1E]">{t.savedAddresses}</h3>
