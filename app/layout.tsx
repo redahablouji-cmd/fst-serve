@@ -8,8 +8,13 @@ export const metadata: Metadata = {
   title: 'FST SERVE',
   description: 'Fast EV Charging Service',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'FST SERVE',
+  },
 };
-
 export default function RootLayout({
   children,
 }: {
