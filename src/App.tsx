@@ -594,7 +594,33 @@ const MapControls = ({ userLocation, isDraggingMap }: { userLocation: { lat: num
 
 export default function App() {
   const [isAppReady, setIsAppReady] = useState(false);
-  const [language, setLanguage] = useState<Language>('en');
+  
+  // --- PWA Install Logic ---
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      // Show the native 1-click install prompt on Android!
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      // Fallback for iPhones (because Apple blocks the instant prompt)
+      alert("📲 To install FST SERVE:\n\niPhone: Tap the Share icon at the bottom and select 'Add to Home Screen'.\n\nSafari/Chrome: Tap the menu and select 'Add to Home screen'.");
+    }
+  };
+  // -------------------------nst [language, setLanguage] = useState<Language>('en');
   const t = translations[language];
 
   const [step, setStep] = useState<number>(1);
@@ -862,7 +888,7 @@ export default function App() {
                 </div>
 {/* 📲 Download App Banner */}
         <button
-          onClick={() => alert("📲 To install FST SERVE:\n\niPhone: Tap the Share icon at the bottom and select 'Add to Home Screen'.\n\nAndroid: Tap the 3 dots at the top right and select 'Install App' or 'Add to Home screen'.")}
+          onClick={handleInstallClick}
           className="w-full bg-[#1C1C1E] rounded-2xl p-4 flex items-center justify-between shadow-[0_8px_30px_rgba(0,0,0,0.12)] active:scale-[0.98] transition-transform border border-white/10"
         >
           <div className="flex items-center gap-3">
