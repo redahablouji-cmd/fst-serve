@@ -598,7 +598,13 @@ export default function App() {
 // --- PWA Install Logic ---
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
-  useEffect(() => {
+useEffect(() => {
+    // 1. Start the Background Engine
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    }
+
+    // 2. Listen for the Install Prompt
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
