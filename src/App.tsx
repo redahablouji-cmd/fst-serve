@@ -668,6 +668,35 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Data State
+  // 1. Helper to get next 7 days starting from today
+  const getAvailableDates = () => {
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      dates.push(d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+    }
+    return dates;
+  };
+
+  // 2. Helper to get 24/7 times with 30-min gaps
+  const getAvailableTimes = () => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      const hour = h.toString().padStart(2, '0');
+      times.push(`${hour}:00`);
+      times.push(`${hour}:30`);
+    }
+    return times;
+  };
+
+  const availableDates = getAvailableDates();
+  const availableTimes = getAvailableTimes();
+  
+  // 3. Update these existing state lines (or add them if missing)
+  const [selectedDate, setSelectedDate] = useState<string>(availableDates[0]);
+  const [selectedTime, setSelectedTime] = useState<string | null>(availableTimes[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [location, setLocation] = useState<string>('');
   const [locationLabel, setLocationLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
   const [locationNotes, setLocationNotes] = useState('');
@@ -1275,43 +1304,47 @@ const handleConfirm = async () => {
               >
                 <div className="space-y-4">
                   <h3 className="font-bold text-[#1C1C1E]">{t.selectDate}</h3>
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                    {['Today', 'Tomorrow', 'Wed 31', 'Thu 1', 'Fri 2'].map((date) => (
-                      <button
-                        key={date}
-                        onClick={() => setSelectedDate(date)}
-                        className={`min-w-[100px] p-4 rounded-2xl flex flex-col items-center gap-1 transition-all ${
-                          selectedDate === date 
-                            ? 'bg-[#1C1C1E] text-white shadow-lg' 
-                            : 'bg-[#F5F5F7] text-[#8E8E93]'
-                        }`}
-                      >
-                        <Calendar size={18} className={selectedDate === date ? 'text-[#B5F573]' : ''} />
-                        <span className="font-bold text-sm">
-                          {date === 'Today' ? t.today : date === 'Tomorrow' ? t.tomorrow : date}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
+  {availableDates.map((date) => (
+    <button
+      key={date}
+      onClick={() => setSelectedDate(date)}
+      className={`flex-shrink-0 px-4 py-3 rounded-2xl border-2 transition-all ${
+        selectedDate === date 
+          ? 'border-[#B5F573] bg-[#B5F573]/10 text-[#1C1C1E] font-bold' 
+          : 'border-transparent bg-[#F5F5F7] text-[#8E8E93]'
+      }`}
+    >
+      {date}
+    </button>
+  ))}
+</div>
 
                 <div className="space-y-4">
                   <h3 className="font-bold text-[#1C1C1E]">{t.selectTime}</h3>
                   <div className="grid grid-cols-1 gap-3">
-                    {['09:00 AM', '11:00 AM', '01:00 PM', '03:00 PM', '05:00 PM', '07:00 PM'].map((time) => (
-                      <button
-                        key={time}
-                        onClick={() => setSelectedTime(time)}
-                        className={`w-full p-4 rounded-2xl flex justify-between items-center transition-all ${
-                          selectedTime === time 
-                            ? 'bg-[#B5F573] text-[#1C1C1E] shadow-md border border-[#1C1C1E]/10' 
-                            : 'bg-white border border-[#F5F5F7] text-[#1C1C1E]'
-                        }`}
-                      >
-                        <span className="font-bold text-lg">{time}</span>
-                        <span className="text-xs font-medium opacity-60">{t.ratePerKwh}</span>
-                      </button>
-                    ))}
+                   {/* 30-min gap grid with scroll */}
+<div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+{availableTimes.filter(time => {
+  if (selectedDate !== availableDates[0]) return true; // If it's tomorrow or later, show all times!
+  const now = new Date();
+  const timeInMins = parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]);
+  const nowInMins = now.getHours() * 60 + now.getMinutes();
+  return timeInMins > (nowInMins + 30); // Requires at least 30 minutes advance notice
+}).map((time) => (
+    <button
+      key={time}
+      onClick={() => setSelectedTime(time)}
+      className={`py-3 rounded-xl border-2 text-[14px] font-medium transition-all ${
+        selectedTime === time
+          ? 'border-[#B5F573] bg-[#1C1C1E] text-white'
+          : 'border-transparent bg-[#F5F5F7] text-[#8E8E93]'
+      }`}
+    >
+      {time}
+    </button>
+  ))}
+</div>
                   </div>
                 </div>
               </motion.div>
