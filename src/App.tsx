@@ -631,6 +631,36 @@ export default function App() {
     }
   };
   // -------------------------
+// --- SECURE VAULT CONNECTION ---
+  const handleConfirmOrder = async () => {
+    try {
+      // NOTE: We will map these to your actual variables (like selectedEnergy, totalPrice) next!
+      const orderData = {
+        location: "Current User Location", 
+        vehicle: "Selected Vehicle",   
+        energy: "Requested Energy",
+        price: "Total Price"      
+      };
+
+      const response = await fetch('/api/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (response.ok) {
+        alert("✅ Order Sent securely to FST Command Center!");
+      } else {
+        alert("❌ Error sending order. Please try again.");
+      }
+    } catch (error) {
+      console.error("Vault Connection Error:", error);
+    }
+  };
+  // -------------------------------
+  
   const [language, setLanguage] = useState<Language>('en');
   const t = translations[language];
 
@@ -728,6 +758,7 @@ export default function App() {
   }, [step]);
 
   const handleConfirm = async () => {
+    // 1. Calculations & Formatting Logic
     const brand = selectedBrand || '[Brand]';
     const model = selectedModel || '[Model]';
     const capacity = selectedCapacity || DEFAULT_BATTERY_KWH;
@@ -744,17 +775,37 @@ export default function App() {
       ? `https://www.google.com/maps?q=${locationCoords.lat},${locationCoords.lng}`
       : 'Location not provided';
 
-    const payload = {
-      timestamp: new Date().toISOString(),
-      location_coordinates: locationCoords,
-      location_notes: locationNotes,
-      vehicle: `${brand} ${model} (${capacity} kWh)`,
-      energy_requested: energyDisplay,
-      estimated_price: estimatedPrice,
-      scheduled_time: `${selectedDate} @ ${selectedTime}`,
-      general_notes: chargeNotes,
-      reason: chargeReason
-    };
+    try {
+      // 2. Prepare the payload for Airtable
+      const orderData = {
+        location: mapsLink, // 📍 Location: GPS Link
+        location_notes: locationNotes || "None", // 📝 Loc Notes
+        vehicle: `${brand} ${model} (${capacity} kWh)`, // 🚗 Vehicle
+        energy: energyDisplay, // 🔋 Energy
+        price: `${estimatedPrice} DH + delivery fees`, // 💰 Est. Price
+        time: `${selectedDate} @ ${selectedTime}`, // 📅 Time
+        notes: chargeNotes || "None", // 📝 Notes
+        reason: chargeReason || "Convenience" // ❓ Reason
+      };
+
+      // 3. Send securely through the Vercel Vault
+      const response = await fetch('/api/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData),
+      });
+
+      if (response.ok) {
+        setStep(prev => prev + 1); // Move to Success Screen
+        alert("⚡ New FST Charge Request Sent!");
+      } else {
+        alert("❌ Error connecting to Command Center.");
+      }
+    } catch (error) {
+      console.error("Vault Error:", error);
+      alert("❌ Connection failed.");
+    }
+  };
 
     try {
       fetch('/api/submit-order', {
