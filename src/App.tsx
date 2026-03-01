@@ -14,8 +14,10 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 import { 
+  Upload,
+  PlusSquare,
   Smartphone,
-  ChevronRight, 
+  ChevronRight,
   X,
   MapPin,
   Info,
@@ -597,14 +599,16 @@ export default function App() {
   
 // --- PWA Install Logic ---
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [showIOSPrompt, setShowIOSPrompt] = useState(false); // Add this!
 
-useEffect(() => {
-    // 1. Start the Background Engine
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
+      setIsInstalled(true);
+    }
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(console.error);
     }
-
-    // 2. Listen for the Install Prompt
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -613,20 +617,20 @@ useEffect(() => {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
-  const handleInstallClick = async () => {
+ const handleInstallClick = async () => {
     if (deferredPrompt) {
-      // Show the native 1-click install prompt on Android!
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
+        setIsInstalled(true);
       }
     } else {
-      // Fallback for iPhones (because Apple blocks the instant prompt)
-      alert("📲 To install FST SERVE:\n\niPhone: Tap the Share icon at the bottom and select 'Add to Home Screen'.\n\nSafari/Chrome: Tap the menu and select 'Add to Home screen'.");
+      // THIS IS THE CRITICAL LINE THAT TRIGGERS THE NEW MENU!
+      setShowIOSPrompt(true); 
     }
   };
- // -------------------------
+  // -------------------------
   const [language, setLanguage] = useState<Language>('en');
   const t = translations[language];
 
@@ -1574,7 +1578,53 @@ useEffect(() => {
             </>
           )}
         </AnimatePresence>
+{/* Premium Install Instructions (For iOS & Android Fallback) */}
+        <AnimatePresence>
+          {showIOSPrompt && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowIOSPrompt(false)}
+                className="absolute inset-0 bg-black/60 z-[600] backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="absolute bottom-0 left-0 w-full bg-white rounded-t-[32px] z-[601] p-6 pb-12 flex flex-col items-center text-center shadow-2xl md:max-w-2xl md:left-1/2 md:-translate-x-1/2"
+              >
+                <div className="w-12 h-1.5 bg-gray-200 rounded-full mb-6 shrink-0" />
+                <img src="/logo.png" alt="FST SERVE" className="w-16 h-16 bg-[#1C1C1E] rounded-2xl shadow-lg mb-4 object-contain p-2" />
+                <h3 className="text-xl font-black text-[#1C1C1E] mb-2">Install FST SERVE</h3>
+                <p className="text-[#8E8E93] text-sm mb-6 px-4">Add this app to your home screen for quick access and a full-screen experience.</p>
+                
+                <div className="w-full bg-[#F5F5F7] rounded-2xl p-4 flex items-center gap-4 mb-3 border border-gray-100">
+                  <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                    <Upload size={20} className="text-blue-500" />
+                  </div>
+                  <p className="text-sm text-left text-[#1C1C1E] font-medium">1. Tap the <strong className="text-blue-500">Share</strong> or <strong className="text-[#1C1C1E]">Menu</strong> icon.</p>
+                </div>
 
+                <div className="w-full bg-[#F5F5F7] rounded-2xl p-4 flex items-center gap-4 border border-gray-100">
+                  <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                    <PlusSquare size={20} className="text-[#1C1C1E]" />
+                  </div>
+                  <p className="text-sm text-left text-[#1C1C1E] font-medium">2. Tap <strong className="text-[#1C1C1E]">Add to Home Screen</strong> or <strong className="text-[#1C1C1E]">Install App</strong>.</p>
+                </div>
+                
+                <button 
+                  onClick={() => setShowIOSPrompt(false)}
+                  className="mt-6 font-bold text-[#1C1C1E] bg-[#F5F5F7] px-8 py-3 rounded-full active:scale-95 transition-transform"
+                >
+                  Got it
+                </button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
