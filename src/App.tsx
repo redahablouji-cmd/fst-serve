@@ -10,6 +10,24 @@ let DefaultIcon = L.icon({
   iconSize: [25, 41],
   iconAnchor: [12, 41]
 });
+// WhatsApp-Style Map Tap Engine
+function TapToPinMarker({ locationCoords, setLocationCoords }: any) {
+  const map = useMapEvents({
+    click(e) {
+      // 1. Grab the exact GPS coordinates where the finger tapped
+      const newCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+      // 2. Save it to your App's memory
+      setLocationCoords(newCoords);
+      // 3. Smoothly fly the camera to center the new pin
+      map.flyTo(e.latlng, map.getZoom());
+    },
+  });
+
+  // If there are no coords, don't show a pin. If there are, drop the pin!
+  return locationCoords === null ? null : (
+    <Marker position={[locationCoords.lat, locationCoords.lng]} />
+  );
+}
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
@@ -1054,7 +1072,7 @@ const handleConfirm = async () => {
                       attribution='© <a href="https://carto.com/attributions">CARTO</a>'
                       url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                     />
-                    
+                    <TapToPinMarker locationCoords={locationCoords} setLocationCoords={setLocationCoords} />
                     {userGPSLocation && (
                       <Marker position={[userGPSLocation.lat, userGPSLocation.lng]} icon={userLocationIcon} />
                     )}
@@ -1068,15 +1086,7 @@ const handleConfirm = async () => {
                     {/* UPDATED: Smart Floating Map Controls */}
                     <MapControls userLocation={userGPSLocation} isDraggingMap={isDraggingMap} />
                   </MapContainer>
-
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full z-[450] pointer-events-none">
-                    <div className="relative flex items-center justify-center transition-transform">
-                      <div className={`w-4 h-4 bg-[#B5F573] rounded-full border-[2.5px] border-white shadow-[0_0_20px_rgba(181,245,115,0.8)] z-10 transition-all ${isDraggingMap ? 'scale-125' : 'scale-100'}`}></div>
-                      <div className="absolute w-1 h-8 bg-black/80 rounded-full top-3 left-1/2 -translate-x-1/2 -z-10"></div>
-                      {!isDraggingMap && <div className="absolute w-12 h-12 bg-[#B5F573] rounded-full animate-ping opacity-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>}
-                    </div>
-                  </div>
-
+                  
                   {isLocating && (
                     <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-[600] flex items-center justify-center">
                       <div className="flex flex-col items-center gap-3">
