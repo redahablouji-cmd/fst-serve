@@ -714,7 +714,6 @@ export default function App() {
   // 3. Update these existing state lines (or add them if missing)
   const [selectedDate, setSelectedDate] = useState<string>(availableDates[0]);
   const [selectedTime, setSelectedTime] = useState<string | null>(availableTimes[0]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [location, setLocation] = useState<string>('');
   const [locationLabel, setLocationLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
   const [locationNotes, setLocationNotes] = useState('');
