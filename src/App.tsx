@@ -1329,7 +1329,7 @@ const handleConfirm = async () => {
     </button>
   ))}
 </div>
-
+</div>
                 <div className="space-y-4">
                   <h3 className="font-bold text-[#1C1C1E]">{t.selectTime}</h3>
                   <div className="grid grid-cols-1 gap-3">
@@ -1355,6 +1355,7 @@ const handleConfirm = async () => {
     </button>
   ))}
 </div>
+</div>                    
                   </div>
                 </div>
               </motion.div>
