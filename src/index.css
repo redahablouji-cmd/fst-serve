@@ -76,3 +76,9 @@ input[type="range"].ios-slider::-webkit-slider-thumb {
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+/* PWA Hide Rule - Kills the install button inside the app */
+@media all and (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  .pwa-hide {
+    display: none !important;
+  }
+}
