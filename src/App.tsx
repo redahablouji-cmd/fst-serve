@@ -900,7 +900,7 @@ export default function App() {
 {/* 📲 Download App Banner */}
         <button
           onClick={handleInstallClick}
-          className="w-full bg-[#1C1C1E] rounded-2xl p-4 flex items-center justify-between shadow-[0_8px_30px_rgba(0,0,0,0.12)] active:scale-[0.98] transition-transform border border-white/10"
+          className="pwa-hide w-full bg-[#1C1C1E] rounded-2xl p-4 flex items-center justify-between shadow-[0_8px_30px_rgba(0,0,0,0.12)] active:scale-[0.98] transition-transform border border-white/10"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#B5F573]/20 flex items-center justify-center">
