@@ -757,8 +757,8 @@ export default function App() {
     }
   }, [step]);
 
-  const handleConfirm = async () => {
-    // 1. Calculations & Formatting Logic
+ const handleConfirm = async () => {
+    // 1. Calculations & Formatting Logic (Exactly as you built it)
     const brand = selectedBrand || '[Brand]';
     const model = selectedModel || '[Model]';
     const capacity = selectedCapacity || DEFAULT_BATTERY_KWH;
@@ -771,24 +771,39 @@ export default function App() {
       ? `${energyValue}% (${energyInKwh} kWh)` 
       : `${energyValue} kWh`;
 
+    // 2. Fixed GPS Link (Now fully clickable for your drivers)
     const mapsLink = locationCoords 
-      ? `https://www.google.com/maps?q=${locationCoords.lat},${locationCoords.lng}`
+      ? `https://maps.google.com/?q=${locationCoords.lat},${locationCoords.lng}`
       : 'Location not provided';
 
+    // 3. Your Premium WhatsApp Message Template
+    const whatsappMessage = `New FST Charge Request ⚡
+
+📍 Location: ${locationMode === 'gps' ? 'GPS Location' : 'Pinned Location'} ${mapsLink}
+📝 Loc Notes: ${locationNotes || " "}
+
+🚗 Vehicle: ${brand} ${model} (${capacity} kWh)
+🔋 Energy: ${energyDisplay}
+💰 Est. Price: ${estimatedPrice} DH + delivery fees
+
+📅 Time: ${selectedDate} @ ${selectedTime}
+📝 Notes: ${chargeNotes || " "}
+❓ Reason: ${chargeReason || "Convenience"}`;
+
     try {
-      // 2. Prepare the payload for Airtable
+      // 4. Prepare the payload for the Airtable Command Center
       const orderData = {
-        location: mapsLink, // 📍 Location: GPS Link
-        location_notes: locationNotes || "None", // 📝 Loc Notes
-        vehicle: `${brand} ${model} (${capacity} kWh)`, // 🚗 Vehicle
-        energy: energyDisplay, // 🔋 Energy
-        price: `${estimatedPrice} DH + delivery fees`, // 💰 Est. Price
-        time: `${selectedDate} @ ${selectedTime}`, // 📅 Time
-        notes: chargeNotes || "None", // 📝 Notes
-        reason: chargeReason || "Convenience" // ❓ Reason
+        location: mapsLink,
+        location_notes: locationNotes || "None",
+        vehicle: `${brand} ${model} (${capacity} kWh)`,
+        energy: energyDisplay,
+        price: `${estimatedPrice} DH + delivery fees`,
+        time: `${selectedDate} @ ${selectedTime}`,
+        notes: chargeNotes || "None",
+        reason: chargeReason || "Convenience"
       };
 
-      // 3. Send securely through the Vercel Vault
+      // 5. Send securely through the Vercel Vault
       const response = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -796,8 +811,11 @@ export default function App() {
       });
 
       if (response.ok) {
-        setStep(prev => prev + 1); // Move to Success Screen
-        alert("⚡ New FST Charge Request Sent!");
+        // 6. Move to Success Screen AND Open WhatsApp simultaneously!
+        setStep(prev => prev + 1); 
+        
+        const encodedMsg = encodeURIComponent(whatsappMessage);
+        window.open(`https://wa.me/212666126924?text=${encodedMsg}`, '_blank');
       } else {
         alert("❌ Error connecting to Command Center.");
       }
@@ -807,39 +825,11 @@ export default function App() {
     }
   };
 
-    try {
-      fetch('/api/submit-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(err => console.error("Webhook failed:", err));
-    } catch (e) {
-      console.error("Webhook error:", e);
-    }
-
-    const message = `New FST Charge Request ⚡
-
-📍 Location: ${locationMode === 'gps' ? 'GPS Location' : 'Pinned Location'} ${mapsLink}
-📝 Loc Notes: ${locationNotes}
-
-🚗 Vehicle: ${brand} ${model} (${capacity} kWh)
-🔋 Energy: ${energyDisplay}
-💰 Est. Price: ${estimatedPrice} DH + delivery fees
-
-📅 Time: ${selectedDate} @ ${selectedTime}
-📝 Notes: ${chargeNotes}
-❓ Reason: ${chargeReason}`;
-
-    const encodedMsg = encodeURIComponent(message);
-    window.open(`https://wa.me/212666126924?text=${encodedMsg}`, '_blank');
-  };
-
   const openVehicleSheet = () => {
     setSheetStep('brand');
     setSearchTerm('');
     setIsSheetOpen(true);
   };
-
   return (
     <div className="min-h-screen w-full bg-[#f0f0f0] flex justify-center font-sans selection:bg-[#B5F573] selection:text-[#1C1C1E]">
       {/* UPDATED: Removed max-w-[430px] to allow full-screen on Z-Fold */}
