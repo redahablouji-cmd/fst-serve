@@ -666,7 +666,7 @@ export default function App() {
 
   const [step, setStep] = useState<number>(1);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // Data State
   const [location, setLocation] = useState<string>('');
   const [locationLabel, setLocationLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
@@ -757,8 +757,12 @@ export default function App() {
     }
   }, [step]);
 
- const handleConfirm = async () => {
-    // 1. Calculations & Formatting Logic (Exactly as you built it)
+const handleConfirm = async () => {
+    // 1. ANTI-SPAM LOCK
+    if (isSubmitting) return; 
+    setIsSubmitting(true); 
+
+    // 2. Calculations (Keeping your exact logic)
     const brand = selectedBrand || '[Brand]';
     const model = selectedModel || '[Model]';
     const capacity = selectedCapacity || DEFAULT_BATTERY_KWH;
@@ -771,9 +775,8 @@ export default function App() {
       ? `${energyValue}% (${energyInKwh} kWh)` 
       : `${energyValue} kWh`;
 
-    // 2. Fixed GPS Link (Now fully clickable for your drivers)
     const mapsLink = locationCoords 
-      ? `https://maps.google.com/?q=${locationCoords.lat},${locationCoords.lng}`
+      ? `https://www.google.com/maps?q=${locationCoords.lat},${locationCoords.lng}`
       : 'Location not provided';
 
     // 3. Your Premium WhatsApp Message Template
@@ -791,7 +794,7 @@ export default function App() {
 ❓ Reason: ${chargeReason || "Convenience"}`;
 
     try {
-      // 4. Prepare the payload for the Airtable Command Center
+      // 4. Securely send to Airtable Command Center
       const orderData = {
         location: mapsLink,
         location_notes: locationNotes || "None",
@@ -803,7 +806,6 @@ export default function App() {
         reason: chargeReason || "Convenience"
       };
 
-      // 5. Send securely through the Vercel Vault
       const response = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -811,9 +813,19 @@ export default function App() {
       });
 
       if (response.ok) {
-        // 6. Move to Success Screen AND Open WhatsApp simultaneously!
-        setStep(prev => prev + 1); 
+        // 5. SUCCESS: Save to phone memory for History
+        const myActiveOrder = {
+          date: new Date().toLocaleDateString(),
+          vehicle: `${brand} ${model}`,
+          energy: energyDisplay,
+          status: "🔴 Pending"
+        };
+        localStorage.setItem('fst_active_order', JSON.stringify(myActiveOrder));
+
+        // 6. AUTO-RESET: Send user back to Home Page (Step 1)
+        setStep(1); 
         
+        // 7. OPEN WHATSAPP
         const encodedMsg = encodeURIComponent(whatsappMessage);
         window.open(`https://wa.me/212666126924?text=${encodedMsg}`, '_blank');
       } else {
@@ -822,6 +834,8 @@ export default function App() {
     } catch (error) {
       console.error("Vault Error:", error);
       alert("❌ Connection failed.");
+    } finally {
+      setIsSubmitting(false); // Always unlock at the end
     }
   };
 
@@ -1414,7 +1428,7 @@ export default function App() {
                 }`}
               >
                 <CheckCircle2 size={20} />
-                {t.requestCharge}
+                {isSubmitting ? "Processing..." : t.requestCharge}
               </motion.button>
             )}
           </footer>
