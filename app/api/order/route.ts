@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
-    // 3. Send the data securely to Airtable
+    // 3. Send the expanded data securely to Airtable
     const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Orders`, {
       method: 'POST',
       headers: {
@@ -26,9 +26,13 @@ export async function POST(request: Request) {
           {
             fields: {
               "Location": body.location,
+              "Loc Notes": body.location_notes,
               "Vehicle": body.vehicle,
               "Energy": body.energy,
               "Price": body.price,
+              "Time": body.time,
+              "Notes": body.notes,
+              "Reason": body.reason,
               "Status": "🔴 Pending"
             }
           }
