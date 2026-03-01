@@ -1303,9 +1303,9 @@ const handleConfirm = async () => {
               </motion.div>
             )}
 
-            {/* STEP 4: SCHEDULE */}
+           {/* STEP 4: SCHEDULE */}
             {step === 4 && (
-              <motion.div 
+              <motion.div
                 key="step4"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -1315,47 +1315,44 @@ const handleConfirm = async () => {
                 <div className="space-y-4">
                   <h3 className="font-bold text-[#1C1C1E]">{t.selectDate}</h3>
                   <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
-  {availableDates.map((date) => (
-    <button
-      key={date}
-      onClick={() => setSelectedDate(date)}
-      className={`flex-shrink-0 px-4 py-3 rounded-2xl border-2 transition-all ${
-        selectedDate === date 
-          ? 'border-[#B5F573] bg-[#B5F573]/10 text-[#1C1C1E] font-bold' 
-          : 'border-transparent bg-[#F5F5F7] text-[#8E8E93]'
-      }`}
-    >
-      {date}
-    </button>
-  ))}
-</div>
-</div>
+                    {availableDates.map((date) => (
+                      <button
+                        key={date}
+                        onClick={() => setSelectedDate(date)}
+                        className={`flex-shrink-0 px-4 py-3 rounded-2xl border-2 transition-all ${
+                          selectedDate === date 
+                            ? 'border-[#B5F573] bg-[#B5F573]/10 text-[#1C1C1E] font-bold' 
+                            : 'border-transparent bg-[#F5F5F7] text-[#8E8E93]'
+                        }`}
+                      >
+                        {date}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   <h3 className="font-bold text-[#1C1C1E]">{t.selectTime}</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                   {/* 30-min gap grid with scroll */}
-<div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
-{availableTimes.filter(time => {
-  if (selectedDate !== availableDates[0]) return true; // If it's tomorrow or later, show all times!
-  const now = new Date();
-  const timeInMins = parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]);
-  const nowInMins = now.getHours() * 60 + now.getMinutes();
-  return timeInMins > (nowInMins + 30); // Requires at least 30 minutes advance notice
-}).map((time) => (
-    <button
-      key={time}
-      onClick={() => setSelectedTime(time)}
-      className={`py-3 rounded-xl border-2 text-[14px] font-medium transition-all ${
-        selectedTime === time
-          ? 'border-[#B5F573] bg-[#1C1C1E] text-white'
-          : 'border-transparent bg-[#F5F5F7] text-[#8E8E93]'
-      }`}
-    >
-      {time}
-    </button>
-  ))}
-</div>
-</div>                    
+                  <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+                    {availableTimes.filter(time => {
+                      if (selectedDate !== availableDates[0]) return true;
+                      const now = new Date();
+                      const timeInMins = parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]);
+                      const nowInMins = now.getHours() * 60 + now.getMinutes();
+                      return timeInMins > (nowInMins + 30);
+                    }).map((time) => (
+                      <button
+                        key={time}
+                        onClick={() => setSelectedTime(time)}
+                        className={`py-3 rounded-xl border-2 text-[14px] font-medium transition-all ${
+                          selectedTime === time
+                            ? 'border-[#B5F573] bg-[#1C1C1E] text-white'
+                            : 'border-transparent bg-[#F5F5F7] text-[#8E8E93]'
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </motion.div>
