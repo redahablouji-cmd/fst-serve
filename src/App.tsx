@@ -737,9 +737,6 @@ export default function App() {
   const [energyValue, setEnergyValue] = useState<number>(50);
   const [chargeReason, setChargeReason] = useState('');
   const [chargeNotes, setChargeNotes] = useState('');
-  
-  const [selectedDate, setSelectedDate] = useState<string>('Today');
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetStep, setSheetStep] = useState<'brand' | 'model' | 'capacity'>('brand');
