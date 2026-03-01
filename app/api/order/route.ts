@@ -41,9 +41,11 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Airtable's Exact Rejection Reason:", errorText);
       throw new Error('Failed to save to Airtable');
     }
-
+    
     // 4. Tell the app it was a success!
     return NextResponse.json({ success: true });
     
