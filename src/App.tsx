@@ -862,13 +862,21 @@ if (!customerName || !customerPhone) {
       return;
     }
     try {
-      // 4. Securely send to Airtable Command Center
+      // 1. The Date Translator: Converts friendly text into strict YYYY-MM-DD for Airtable Robot
+      const dayIndex = availableDates.indexOf(selectedDate);
+      const targetDate = new Date();
+      if (dayIndex > 0) {
+        targetDate.setDate(targetDate.getDate() + dayIndex);
+      }
+      const strictDate = targetDate.toISOString().split('T')[0];
+
+      // 2. Data Payload
       const orderData = {
         name: customerName,
         phone: customerPhone,
         email: customerEmail,
         status: "🔴 Pending",
-        date: strictDate,     // <--- Sends strict 2026-03-02 so the Robot works!
+        date: strictDate,     // <--- Uses the strictDate calculated above!
         time_only: selectedTime,
         location: mapsLink,
         location_notes: locationNotes || "None",
@@ -880,6 +888,7 @@ if (!customerName || !customerPhone) {
         reason: chargeReason || "Convenience"
       };
 
+      // 3. Securely send to Airtable Command Center
       const response = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -887,7 +896,7 @@ if (!customerName || !customerPhone) {
       });
 
       if (response.ok) {
-        // 1. SUCCESS: Save to phone memory for History
+        // 4. SUCCESS: Save to phone memory for History
         const myActiveOrder = {
           date: new Date().toLocaleDateString(),
           vehicle: `${brand} ${model}`,
@@ -896,27 +905,18 @@ if (!customerName || !customerPhone) {
         };
         localStorage.setItem('fst_active_order', JSON.stringify(myActiveOrder));
 
-        // 2. BYPASS POPUP BLOCKER: Force current tab to WhatsApp directly!
+        // 5. BYPASS POPUP BLOCKER: Force current tab to WhatsApp directly!
         const encodedMsg = encodeURIComponent(whatsappMessage);
         window.location.href = `https://wa.me/212666126924?text=${encodedMsg}`;
         
       } else {
-        localStorage.setItem('fst_active_order', JSON.stringify(myActiveOrder));
-
-        // 6. AUTO-RESET: Send user back to Home Page (Step 1)
-        resetOrder();
-        
-        // 7. OPEN WHATSAPP
-        const encodedMsg = encodeURIComponent(whatsappMessage);
-        window.open(`https://wa.me/212666126924?text=${encodedMsg}`, '_blank');
-      } else {
-        alert("❌ Error connecting to Command Center.");
+        alert("❌ Error connecting to Command Center. Airtable rejected the data.");
       }
     } catch (error) {
       console.error("Vault Error:", error);
       alert("❌ Connection failed.");
     } finally {
-      setIsSubmitting(false); // Always unlock at the end
+      setIsSubmitting(false); // Always unlock the button at the end
     }
   };
 
