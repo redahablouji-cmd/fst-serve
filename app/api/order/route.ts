@@ -48,7 +48,12 @@ export async function POST(request: Request) {
       throw new Error('Failed to save to Airtable');
     }
     
-    return NextResponse.json({ success: true });
+    // --- 🚨 NEW: GRAB THE SECRET AIRTABLE ID ---
+    const data = await response.json();
+    const newRecordId = data.records[0].id; 
+    
+    // 4. Tell the app it was a success AND give it the receipt ID!
+    return NextResponse.json({ success: true, recordId: newRecordId });
     
   } catch (error) {
     console.error("Vault Error:", error);
