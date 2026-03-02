@@ -700,6 +700,19 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Data State
+  // Active Order Tracker State
+  const [activeOrder, setActiveOrder] = useState<any>(null);
+
+  // Success Screen State
+  const [showApproved, setShowApproved] = useState(false);
+
+  // Checks phone memory every time the user goes to the Home Screen
+  useEffect(() => {
+    const savedOrder = localStorage.getItem('fst_active_order');
+    if (savedOrder) {
+      setActiveOrder(JSON.parse(savedOrder));
+    }
+  }, [step]);
   // 1. Helper to get next 7 days starting from today
   const getAvailableDates = () => {
     const dates = [];
@@ -955,6 +968,30 @@ if (!customerName || !customerPhone) {
             </motion.div>
           )}
         </AnimatePresence>
+        {/* SUCCESS / APPROVED OVERLAY */}
+        <AnimatePresence>
+          {showApproved && (
+            <motion.div 
+              key="approved"
+              // Heavy glass blur behind the popup!
+              className="fixed inset-0 z-[9999] bg-white/30 backdrop-blur-xl flex flex-col items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Green Box with Black Checkmark */}
+              <div className="bg-[#B5F573] p-10 rounded-[40px] shadow-2xl flex flex-col items-center text-center max-w-sm mx-4 transform transition-all scale-100">
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-6">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="7 12 10.5 15.5 17.5 8.5"></polyline>
+                </svg>
+                <h2 className="text-4xl font-black text-black mb-2 uppercase tracking-tighter">Approved</h2>
+                <p className="text-black/80 font-bold text-lg leading-tight">Redirecting to WhatsApp...</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Sticky Header */}
         {step !== 2 && (
           <motion.header 
@@ -1012,6 +1049,19 @@ if (!customerName || !customerPhone) {
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-8 pt-4 md:max-w-2xl md:mx-auto"
               >
+                {/* 🔴 LIVE ORDER TRACKER CARD */}
+          {activeOrder && (
+            <div className="w-full bg-[#1C1C1E] text-white rounded-3xl p-5 mb-6 shadow-2xl border border-gray-800">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-bold text-lg text-[#B5F573]">My FST Dispatch</h3>
+                <span className="bg-white/10 px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                  {activeOrder.status}
+                </span>
+              </div>
+              <p className="text-gray-400 font-medium">{activeOrder.vehicle}</p>
+              <p className="text-white font-bold">{activeOrder.date} • {activeOrder.energy}</p>
+            </div>
+          )}
                 <div>
                   <h1 className="text-3xl font-black text-[#1C1C1E] tracking-tight">{t.welcome}</h1>
                   <p className="text-lg text-[#8E8E93] font-medium">{t.letsGetCharging}</p>
