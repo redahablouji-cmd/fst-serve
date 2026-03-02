@@ -4,8 +4,8 @@
   "description": "Premium on-demand EV charging service in Morocco.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#00FF00",
-  "theme_color": "#00FF00",
+  "background_color": "#B5F573",
+  "theme_color": "#B5F573",
   "icons": [
     {
       "src": "/logo.png",
