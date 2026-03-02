@@ -930,26 +930,30 @@ if (!customerName || !customerPhone) {
       {/* UPDATED: Removed max-w-[430px] to allow full-screen on Z-Fold */}
       <div className="flex flex-col h-[100dvh] w-full bg-[#FFFFFF] text-[#1C1C1E] relative shadow-2xl overflow-hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         
-        {/* Splash Screen Overlay */}
+        {/* NEW UNIFIED SPLASH SCREEN */}
         <AnimatePresence>
           {!isAppReady && (
-            <motion.div
+            <motion.div 
+              key="splash"
+              className="fixed inset-0 z-[9999] bg-[#00FF00] flex items-center justify-center"
               initial={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, delay: 1.5 }}
-              className="absolute inset-0 z-[1000] bg-[#B5F573] flex items-center justify-center"
+              transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              <motion.div
-                initial={{ scale: 1.5, y: 0 }}
-                exit={{ scale: 0.7, y: -window.innerHeight / 2 + 60 }} 
-                transition={{ duration: 1, delay: 1.5, ease: "easeInOut" }}
+              {/* The Black Lightning Bolt */}
+              <svg 
+                width="140" 
+                height="140" 
+                viewBox="0 0 24 24" 
+                fill="black" 
+                xmlns="http://www.w3.org/2000/svg"
+                className="animate-pulse"
               >
-                <FstLogo />
-              </motion.div>
+                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
+              </svg>
             </motion.div>
           )}
         </AnimatePresence>
-
         {/* Sticky Header */}
         {step !== 2 && (
           <motion.header 
