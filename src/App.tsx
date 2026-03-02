@@ -28,7 +28,21 @@ function TapToPinMarker({ locationCoords, setLocationCoords }: any) {
     <Marker position={[locationCoords.lat, locationCoords.lng]} />
   );
 }
+// Auto-Pilot: Flies map to user the second it opens
+function AutoLocate({ setLocationCoords }: any) {
+  const map = useMapEvents({
+    locationfound(e) {
+      setLocationCoords({ lat: e.latlng.lat, lng: e.latlng.lng });
+      map.flyTo(e.latlng, 16); // 16 is a great street-level zoom
+    },
+  });
 
+  React.useEffect(() => {
+    map.locate(); // Triggers the phone's GPS instantly
+  }, [map]);
+
+  return null;
+}
 L.Marker.prototype.options.icon = DefaultIcon;
 
 import { 
@@ -740,20 +754,9 @@ export default function App() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetStep, setSheetStep] = useState<'brand' | 'model' | 'capacity'>('brand');
   const [searchTerm, setSearchTerm] = useState('');
-// Memory Wiper: Resets the entire app state after an order
+// The Nuclear Wiper: Hard resets the entire app instantly
   const resetOrder = () => {
-    setStep(1); // Send them back to Home
-    setSelectedDate(availableDates[0]); // Reset date
-    setSelectedTime(null); // Clear time
-    setLocation(''); // Clear address
-    setLocationLabel('Home'); 
-    setLocationNotes(''); // Clear location notes
-    setChargeNotes(''); // Clear car notes
-    setLocationCoords(null); // Clear the map pin
-    setSelectedBrand(null); // Clear selected car brand
-    setSelectedModel(null); // Clear selected car model
-    setSelectedCapacity(null); // Clear battery capacity
-    setEnergyValue(50); // Reset battery slider back to 50%
+    window.location.reload(); 
   };
   const scrollRef = useRef<HTMLElement>(null);
   const { scrollY } = useScroll({ container: scrollRef });
@@ -1083,6 +1086,7 @@ const handleConfirm = async () => {
                       url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                     />
                     <TapToPinMarker locationCoords={locationCoords} setLocationCoords={setLocationCoords} />
+                    <AutoLocate setLocationCoords={setLocationCoords} />
                     {userGPSLocation && (
                       <Marker position={[userGPSLocation.lat, userGPSLocation.lng]} icon={userLocationIcon} />
                     )}
@@ -1322,6 +1326,22 @@ const handleConfirm = async () => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6 md:max-w-2xl md:mx-auto"
               >
+                {/* 🚨 URGENT DISPATCH BUTTON */}
+<button
+  onClick={() => {
+    setSelectedDate('Today');
+    setSelectedTime('ASAP (Urgent Dispatch)');
+    setStep(5); // Skips immediately to the final review screen!
+  }}
+  className="w-full bg-[#FF3B30] text-white font-bold py-5 rounded-2xl mb-8 shadow-[0_4px_20px_rgba(255,59,48,0.4)] flex justify-center items-center gap-2 transition-all active:scale-95"
+>
+  <span className="text-2xl animate-pulse">🚨</span>
+  <span>URGENT - SEND TRUCK NOW</span>
+</button>
+
+<div className="w-full h-[1px] bg-gray-200 mb-8 relative">
+  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#F5F5F7] px-4 text-xs font-bold text-gray-400">OR SCHEDULE FOR LATER</span>
+</div>
                 <div className="space-y-4">
                   <h3 className="font-bold text-[#1C1C1E]">{t.selectDate}</h3>
                   <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
