@@ -754,6 +754,10 @@ export default function App() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetStep, setSheetStep] = useState<'brand' | 'model' | 'capacity'>('brand');
   const [searchTerm, setSearchTerm] = useState('');
+  // CRM State
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
 // The Nuclear Wiper: Hard resets the entire app instantly
   const resetOrder = () => {
     window.location.reload(); 
@@ -852,10 +856,20 @@ const handleConfirm = async () => {
 📅 Time: ${selectedDate} @ ${selectedTime}
 📝 Notes: ${chargeNotes || " "}
 ❓ Reason: ${chargeReason || "Convenience"}`;
-
+if (!customerName || !customerPhone) {
+      alert("🚨 Please enter your Name and WhatsApp Number so we can dispatch the truck!");
+      setIsSubmitting(false);
+      return;
+    }
     try {
       // 4. Securely send to Airtable Command Center
       const orderData = {
+        name: customerName,
+        phone: customerPhone,
+        email: customerEmail,
+        status: "🔴 Pending",
+        date: selectedDate,
+        time_only: selectedTime,
         location: mapsLink,
         location_notes: locationNotes || "None",
         vehicle: `${brand} ${model} (${capacity} kWh)`,
@@ -1439,6 +1453,31 @@ const handleConfirm = async () => {
                       </div>
                     </div>
                   </div>
+                  {/* CRM CAPTURE FORM */}
+            <div className="space-y-3 mt-6 mb-6 bg-[#F5F5F7] p-5 rounded-2xl border border-gray-200">
+              <h3 className="font-bold text-[#1C1C1E] mb-2">Contact Details</h3>
+              <input
+                type="text"
+                placeholder="Full Name *"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="w-full p-4 rounded-xl border-2 border-transparent focus:border-[#B5F573] focus:bg-white bg-white outline-none transition-all font-medium text-[#1C1C1E]"
+              />
+              <input
+                type="tel"
+                placeholder="WhatsApp Number *"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                className="w-full p-4 rounded-xl border-2 border-transparent focus:border-[#B5F573] focus:bg-white bg-white outline-none transition-all font-medium text-[#1C1C1E]"
+              />
+              <input
+                type="email"
+                placeholder="Email (Optional)"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                className="w-full p-4 rounded-xl border-2 border-transparent focus:border-[#B5F573] focus:bg-white bg-white outline-none transition-all font-medium text-[#1C1C1E]"
+              />
+            </div>
 
                   <div className="pt-6 border-t border-[#1C1C1E]/5 flex justify-between items-end">
                     <div>
