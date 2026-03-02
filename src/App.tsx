@@ -740,7 +740,21 @@ export default function App() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetStep, setSheetStep] = useState<'brand' | 'model' | 'capacity'>('brand');
   const [searchTerm, setSearchTerm] = useState('');
-
+// Memory Wiper: Resets the entire app state after an order
+  const resetOrder = () => {
+    setStep(1); // Send them back to Home
+    setSelectedDate(availableDates[0]); // Reset date
+    setSelectedTime(null); // Clear time
+    setLocation(''); // Clear address
+    setLocationLabel('Home'); 
+    setLocationNotes(''); // Clear location notes
+    setChargeNotes(''); // Clear car notes
+    setLocationCoords(null); // Clear the map pin
+    setSelectedBrand(null); // Clear selected car brand
+    setSelectedModel(null); // Clear selected car model
+    setSelectedCapacity(null); // Clear battery capacity
+    setEnergyValue(50); // Reset battery slider back to 50%
+  };
   const scrollRef = useRef<HTMLElement>(null);
   const { scrollY } = useScroll({ container: scrollRef });
   
@@ -866,7 +880,7 @@ const handleConfirm = async () => {
         localStorage.setItem('fst_active_order', JSON.stringify(myActiveOrder));
 
         // 6. AUTO-RESET: Send user back to Home Page (Step 1)
-        setStep(1); 
+        resetOrder();
         
         // 7. OPEN WHATSAPP
         const encodedMsg = encodeURIComponent(whatsappMessage);
