@@ -868,7 +868,7 @@ if (!customerName || !customerPhone) {
         phone: customerPhone,
         email: customerEmail,
         status: "🔴 Pending",
-        date: selectedDate,
+        date: strictDate,     // <--- Sends strict 2026-03-02 so the Robot works!
         time_only: selectedTime,
         location: mapsLink,
         location_notes: locationNotes || "None",
@@ -887,13 +887,20 @@ if (!customerName || !customerPhone) {
       });
 
       if (response.ok) {
-        // 5. SUCCESS: Save to phone memory for History
+        // 1. SUCCESS: Save to phone memory for History
         const myActiveOrder = {
           date: new Date().toLocaleDateString(),
           vehicle: `${brand} ${model}`,
           energy: energyDisplay,
           status: "🔴 Pending"
         };
+        localStorage.setItem('fst_active_order', JSON.stringify(myActiveOrder));
+
+        // 2. BYPASS POPUP BLOCKER: Force current tab to WhatsApp directly!
+        const encodedMsg = encodeURIComponent(whatsappMessage);
+        window.location.href = `https://wa.me/212666126924?text=${encodedMsg}`;
+        
+      } else {
         localStorage.setItem('fst_active_order', JSON.stringify(myActiveOrder));
 
         // 6. AUTO-RESET: Send user back to Home Page (Step 1)
