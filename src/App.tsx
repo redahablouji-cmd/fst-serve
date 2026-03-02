@@ -930,17 +930,18 @@ if (!customerName || !customerPhone) {
       {/* UPDATED: Removed max-w-[430px] to allow full-screen on Z-Fold */}
       <div className="flex flex-col h-[100dvh] w-full bg-[#FFFFFF] text-[#1C1C1E] relative shadow-2xl overflow-hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         
-        {/* NEW UNIFIED SPLASH SCREEN */}
+        {/* NEW UNIFIED SPLASH SCREEN (SIGNATURE BRAND COLOR) */}
         <AnimatePresence>
           {!isAppReady && (
             <motion.div 
               key="splash"
-              className="fixed inset-0 z-[9999] bg-[#00FF00] flex items-center justify-center"
+              // Uses signature FST Lime Green: #B5F573
+              className="fixed inset-0 z-[9999] bg-[#B5F573] flex items-center justify-center"
               initial={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              {/* The Black Lightning Bolt */}
+              {/* The Bold Black Lightning Bolt */}
               <svg 
                 width="140" 
                 height="140" 
