@@ -711,7 +711,22 @@ export default function App() {
 
   // Success Screen State
   const [showApproved, setShowApproved] = useState(false);
-
+// --- 🚨 INVISIBLE ACCOUNT: Load user profile on startup ---
+  useEffect(() => {
+    try {
+      const savedProfile = localStorage.getItem('fst_user_profile');
+      if (savedProfile) {
+        const { savedName, savedPhone, savedEmail } = JSON.parse(savedProfile);
+        
+        // Auto-fills your form fields using your exact state names
+        if (savedName && typeof setFullName === 'function') setFullName(savedName);
+        if (savedPhone && typeof setWhatsappNumber === 'function') setWhatsappNumber(savedPhone);
+        if (savedEmail && typeof setEmail === 'function') setEmail(savedEmail);
+      }
+    } catch (e) {
+      console.error("Profile load error", e);
+    }
+  }, []);
   // Checks phone memory AND Live Airtable Status for ALL trucks automatically
   useEffect(() => {
     // 1. Safe Migration: Converts old single orders to the new Fleet List
@@ -1022,7 +1037,13 @@ if (!customerName || !customerPhone) {
         
         currentOrders.unshift(myActiveOrder); // Adds newest order to the top!
         localStorage.setItem('fst_orders_list', JSON.stringify(currentOrders));
-
+// --- 🚨 INVISIBLE ACCOUNT: Save details for next time! ---
+        const userProfile = {
+          savedName: fullName,       
+          savedPhone: whatsappNumber, 
+          savedEmail: email          
+        };
+        localStorage.setItem('fst_user_profile', JSON.stringify(userProfile));
         // 2. Trigger the "Approved" Popup!
         setShowApproved(true);
 
