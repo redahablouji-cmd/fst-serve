@@ -706,14 +706,16 @@ export default function App() {
   // Success Screen State
   const [showApproved, setShowApproved] = useState(false);
 
-  // Checks phone memory AND Live Airtable Status every time they go to the Home Screen!
+  // Checks phone memory AND Live Airtable Status automatically
   useEffect(() => {
     const savedOrder = localStorage.getItem('fst_active_order');
-    if (savedOrder) {
-      const parsedOrder = JSON.parse(savedOrder);
-      setActiveOrder(parsedOrder);
-      
-      // 🚨 NEW: If we have an Airtable ID, ask the API for live status!
+    if (!savedOrder) return; // Stop if no order saved
+
+    const parsedOrder = JSON.parse(savedOrder);
+    setActiveOrder(parsedOrder);
+    
+    // Function to ask the Command Center for updates
+    const checkLiveStatus = () => {
       if (parsedOrder.id) {
         fetch(`/api/track?id=${parsedOrder.id}`)
           .then(res => res.json())
@@ -723,12 +725,23 @@ export default function App() {
                const updatedOrder = { ...parsedOrder, status: data.status };
                setActiveOrder(updatedOrder);
                localStorage.setItem('fst_active_order', JSON.stringify(updatedOrder));
+               parsedOrder.status = data.status; // Update local reference so it doesn't loop
             }
           })
           .catch(err => console.error("Tracker error", err));
       }
-    }
-  }, [step]); // Triggers every time they return to the Home Screen
+    };
+
+    // 1. Check immediately when they open the page
+    checkLiveStatus();
+
+    // 2. 🚨 NEW: Auto-check every 5 seconds! No refresh needed!
+    const statusTimer = setInterval(checkLiveStatus, 5000);
+
+    // 3. Clean up the timer when they leave the screen so it doesn't drain battery
+    return () => clearInterval(statusTimer);
+
+  }, [step]); // Triggers when they return to the Home Screen
   // 1. Helper to get next 7 days starting from today
   const getAvailableDates = () => {
     const dates = [];
@@ -1001,20 +1014,21 @@ if (!customerName || !customerPhone) {
           {showApproved && (
             <motion.div 
               key="approved"
-              // Heavy glass blur behind the popup!
+              // Heavy glass blur behind the popup remains!
               className="fixed inset-0 z-[9999] bg-white/30 backdrop-blur-xl flex flex-col items-center justify-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Green Box with Black Checkmark */}
-              <div className="bg-[#B5F573] p-10 rounded-[40px] shadow-2xl flex flex-col items-center text-center max-w-sm mx-4 transform transition-all scale-100">
-                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-6">
+              {/* Box is now TRANSPARENT, no green background, no shadow */}
+              <div className="bg-transparent p-10 flex flex-col items-center text-center max-w-sm mx-4 transform transition-all scale-100">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-6">
                   <circle cx="12" cy="12" r="10"></circle>
                   <polyline points="7 12 10.5 15.5 17.5 8.5"></polyline>
                 </svg>
-                <h2 className="text-4xl font-black text-black mb-2 uppercase tracking-tighter">Approved</h2>
+                {/* Changed text to Successfully */}
+                <h2 className="text-4xl font-black text-black mb-2 uppercase tracking-tighter">Successfully</h2>
                 <p className="text-black/80 font-bold text-lg leading-tight">Redirecting to WhatsApp...</p>
               </div>
             </motion.div>
