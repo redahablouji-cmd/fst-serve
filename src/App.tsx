@@ -832,16 +832,6 @@ export default function App() {
     return dates;
   };
 
-  // 2. Helper to get 24/7 times with 30-min gaps
-  const getAvailableTimes = () => {
-    const times = [];
-    for (let h = 0; h < 24; h++) {
-      const hour = h.toString().padStart(2, '0');
-      times.push(`${hour}:00`);
-      times.push(`${hour}:30`);
-    }
-    return times;
-  };
   const availableDates = getAvailableDates();
   const availableTimes = getAvailableTimes();
   
