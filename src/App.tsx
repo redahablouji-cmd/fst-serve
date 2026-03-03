@@ -706,13 +706,29 @@ export default function App() {
   // Success Screen State
   const [showApproved, setShowApproved] = useState(false);
 
-  // Checks phone memory every time the user goes to the Home Screen
+  // Checks phone memory AND Live Airtable Status every time they go to the Home Screen!
   useEffect(() => {
     const savedOrder = localStorage.getItem('fst_active_order');
     if (savedOrder) {
-      setActiveOrder(JSON.parse(savedOrder));
+      const parsedOrder = JSON.parse(savedOrder);
+      setActiveOrder(parsedOrder);
+      
+      // 🚨 NEW: If we have an Airtable ID, ask the API for live status!
+      if (parsedOrder.id) {
+        fetch(`/api/track?id=${parsedOrder.id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.status && data.status !== parsedOrder.status) {
+               // Airtable changed! Update the card and save the new status to memory
+               const updatedOrder = { ...parsedOrder, status: data.status };
+               setActiveOrder(updatedOrder);
+               localStorage.setItem('fst_active_order', JSON.stringify(updatedOrder));
+            }
+          })
+          .catch(err => console.error("Tracker error", err));
+      }
     }
-  }, [step]);
+  }, [step]); // Triggers every time they return to the Home Screen
   // 1. Helper to get next 7 days starting from today
   const getAvailableDates = () => {
     const dates = [];
@@ -909,8 +925,12 @@ if (!customerName || !customerPhone) {
       });
 
       if (response.ok) {
-        // 4. SUCCESS: Save to phone memory for History
+        // --- 🚨 NEW: Parse the response to get the secret Airtable ID ---
+        const responseData = await response.json();
+
+        // 1. SUCCESS: Save to phone memory WITH the ID
         const myActiveOrder = {
+          id: responseData.recordId, // <--- Saves the Digital Receipt!
           date: new Date().toLocaleDateString(),
           vehicle: `${brand} ${model}`,
           energy: energyDisplay,
@@ -918,9 +938,17 @@ if (!customerName || !customerPhone) {
         };
         localStorage.setItem('fst_active_order', JSON.stringify(myActiveOrder));
 
-        // 5. BYPASS POPUP BLOCKER: Force current tab to WhatsApp directly!
-        const encodedMsg = encodeURIComponent(whatsappMessage);
-        window.location.href = `https://wa.me/212666126924?text=${encodedMsg}`;
+        // 2. Trigger the "Approved" Popup!
+        setShowApproved(true);
+
+        // 3. Wait 2.5 seconds, clean the app, and jump to WhatsApp
+        setTimeout(() => {
+          setShowApproved(false);
+          setStep(1); // Force the background app back to Home!
+          
+          const encodedMsg = encodeURIComponent(whatsappMessage);
+          window.location.href = `https://wa.me/212666126924?text=${encodedMsg}`;
+        }, 2500);
         
       } else {
         alert("❌ Error connecting to Command Center. Airtable rejected the data.");
