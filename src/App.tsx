@@ -1026,26 +1026,18 @@ if (!customerName || !customerPhone) {
         // 2. Trigger the "Approved" Popup!
         setShowApproved(true);
 
-        // 3. Wait exactly 1 second, clean the app, and jump to WhatsApp
+        // 3. Wait exactly 1 second, and jump to WhatsApp
         setTimeout(() => {
           setShowApproved(false);
           setStep(1); // Force the background app back to Home!
           
-          // 🚨 WIPE PREVIOUS FORM CHOICES CLEAN
-          try {
-             if (typeof setLocationCoords === 'function') setLocationCoords(null);
-             if (typeof setBrand === 'function') setBrand('');
-             if (typeof setModel === 'function') setModel('');
-          } catch (e) {
-             console.log("Cleanup skipping unmounted states");
-          }
-          
           const encodedMsg = encodeURIComponent(whatsappMessage);
           window.location.href = `https://wa.me/212666126924?text=${encodedMsg}`;
           
-          // Forces a fresh browser load behind the scenes 1 second after WhatsApp opens
+          // 🚨 THE ULTIMATE CLEANUP: Forces a fresh browser load behind the scenes!
+          // This automatically wipes all form memory (brand, model, location) flawlessly.
           setTimeout(() => window.location.reload(), 1000);
-        }, 1000); // <--- 🚨 CHANGED FROM 2500 to 1000 (1 Second!)
+        }, 1000);
         
       } else {
         alert("❌ Error connecting to Command Center. Airtable rejected the data.");
