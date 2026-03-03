@@ -700,45 +700,56 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Data State
-  // Active Order Tracker State
-  const [activeOrder, setActiveOrder] = useState<any>(null);
+  // --- 🚨 FLEET TRACKER STATE (Supports Multiple Orders) ---
+  const [activeOrders, setActiveOrders] = useState<any[]>([]);
+  
+  // Cancel Modal States
+  const [orderToCancel, setOrderToCancel] = useState<any>(null);
+  const [cancelReason, setCancelReason] = useState<string>("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Success Screen State
   const [showApproved, setShowApproved] = useState(false);
 
-  // Checks phone memory AND Live Airtable Status automatically
+  // Checks phone memory AND Live Airtable Status for ALL trucks automatically
   useEffect(() => {
-    const savedOrder = localStorage.getItem('fst_active_order');
-    if (!savedOrder) return; // Stop if no order saved
+    // 1. Safe Migration: Converts old single orders to the new Fleet List
+    let currentOrders: any[] = [];
+    const oldSingle = localStorage.getItem('fst_active_order');
+    if (oldSingle) {
+      currentOrders.push(JSON.parse(oldSingle));
+      localStorage.removeItem('fst_active_order'); // Clean up old system
+      localStorage.setItem('fst_orders_list', JSON.stringify(currentOrders));
+    } else {
+      const savedList = localStorage.getItem('fst_orders_list');
+      if (savedList) currentOrders = JSON.parse(savedList);
+    }
 
-    const parsedOrder = JSON.parse(savedOrder);
-    setActiveOrder(parsedOrder);
-    
-    // Function to ask the Command Center for updates
+    setActiveOrders(currentOrders);
+
+    // 2. Ask Command Center for updates on EVERY active truck
     const checkLiveStatus = () => {
-      if (parsedOrder.id) {
-        fetch(`/api/track?id=${parsedOrder.id}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.status && data.status !== parsedOrder.status) {
-               // Airtable changed! Update the card and save the new status to memory
-               const updatedOrder = { ...parsedOrder, status: data.status };
-               setActiveOrder(updatedOrder);
-               localStorage.setItem('fst_active_order', JSON.stringify(updatedOrder));
-               parsedOrder.status = data.status; // Update local reference so it doesn't loop
-            }
-          })
-          .catch(err => console.error("Tracker error", err));
-      }
+      if (currentOrders.length === 0) return;
+
+      currentOrders.forEach((order, index) => {
+         // Stop tracking if it is already canceled!
+         if (order.id && !order.status.includes('Canceled') && !order.status.includes('Annulé')) {
+            fetch(`/api/track?id=${order.id}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.status && data.status !== currentOrders[index].status) {
+                   currentOrders[index].status = data.status;
+                   setActiveOrders([...currentOrders]);
+                   localStorage.setItem('fst_orders_list', JSON.stringify(currentOrders));
+                }
+              })
+              .catch(err => console.error("Tracker error", err));
+         }
+      });
     };
 
-    // 1. Check immediately when they open the page
     checkLiveStatus();
-
-    // 2. 🚨 NEW: Auto-check every 5 seconds! No refresh needed!
     const statusTimer = setInterval(checkLiveStatus, 5000);
-
-    // 3. Clean up the timer when they leave the screen so it doesn't drain battery
     return () => clearInterval(statusTimer);
 
   }, [step]); // Triggers when they return to the Home Screen
@@ -938,18 +949,22 @@ if (!customerName || !customerPhone) {
       });
 
       if (response.ok) {
-        // --- 🚨 NEW: Parse the response to get the secret Airtable ID ---
         const responseData = await response.json();
 
-        // 1. SUCCESS: Save to phone memory WITH the ID
+        // --- 🚨 NEW: Adds the new order to their Fleet List ---
+        const savedList = localStorage.getItem('fst_orders_list');
+        const currentOrders = savedList ? JSON.parse(savedList) : [];
+        
         const myActiveOrder = {
-          id: responseData.recordId, // <--- Saves the Digital Receipt!
+          id: responseData.recordId, 
           date: new Date().toLocaleDateString(),
           vehicle: `${brand} ${model}`,
           energy: energyDisplay,
           status: "🔴 Pending"
         };
-        localStorage.setItem('fst_active_order', JSON.stringify(myActiveOrder));
+        
+        currentOrders.unshift(myActiveOrder); // Adds newest order to the top!
+        localStorage.setItem('fst_orders_list', JSON.stringify(currentOrders));
 
         // 2. Trigger the "Approved" Popup!
         setShowApproved(true);
@@ -957,7 +972,7 @@ if (!customerName || !customerPhone) {
         // 3. Wait 2.5 seconds, clean the app, and jump to WhatsApp
         setTimeout(() => {
           setShowApproved(false);
-          setStep(1); // Force the background app back to Home!
+          setStep(1); 
           
           const encodedMsg = encodeURIComponent(whatsappMessage);
           window.location.href = `https://wa.me/212666126924?text=${encodedMsg}`;
