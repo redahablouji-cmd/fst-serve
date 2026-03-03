@@ -753,6 +753,53 @@ export default function App() {
     return () => clearInterval(statusTimer);
 
   }, [step]); // Triggers when they return to the Home Screen
+  // --- 🚨 FLEET LOGIC: Status Translation & Cancel Engine ---
+  const translateStatus = (status: string, lang: string) => {
+    if (!status) return "";
+    if (lang === 'fr') {
+      if (status.includes('Pending')) return '🔴 En attente';
+      if (status.includes('Process')) return '🟡 En cours';
+      if (status.includes('Way')) return '🟢 En route';
+      if (status.includes('Canceled')) return '⚫ Annulé';
+    }
+    if (lang === 'ar') {
+      if (status.includes('Pending')) return '🔴 قيد الانتظار';
+      if (status.includes('Process')) return '🟡 قيد المعالجة';
+      if (status.includes('Way')) return '🟢 في الطريق';
+      if (status.includes('Canceled')) return '⚫ ملغى';
+    }
+    return status; // Default English
+  };
+
+  const submitCancellation = async () => {
+    setIsCancelling(true);
+    try {
+      const response = await fetch('/api/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderToCancel.id, reason: cancelReason })
+      });
+      
+      if (response.ok) {
+        // Instantly update the card on the screen!
+        const updatedOrders = activeOrders.map(o => 
+          o.id === orderToCancel.id ? { ...o, status: "⚫ Canceled" } : o
+        );
+        setActiveOrders(updatedOrders);
+        localStorage.setItem('fst_orders_list', JSON.stringify(updatedOrders));
+        
+        // Close modal
+        setOrderToCancel(null);
+        setCancelReason("");
+      } else {
+        alert("❌ Error connecting to Command Center.");
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
   // 1. Helper to get next 7 days starting from today
   const getAvailableDates = () => {
     const dates = [];
@@ -1049,6 +1096,64 @@ if (!customerName || !customerPhone) {
             </motion.div>
           )}
         </AnimatePresence>
+        {/* CANCELLATION REASON MODAL */}
+        <AnimatePresence>
+          {orderToCancel && (
+            <motion.div 
+              key="cancel-modal"
+              className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-end justify-center"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            >
+              <motion.div 
+                className="bg-white w-full md:max-w-md rounded-t-[40px] p-6 pb-12 md:rounded-[40px] md:mb-10 shadow-2xl"
+                initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              >
+                <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 shrink-0" />
+                <h3 className="text-2xl font-black text-[#1C1C1E] mb-2 uppercase tracking-tight">Cancel Dispatch</h3>
+                <p className="text-gray-500 font-medium mb-6">Please tell us why you are cancelling:</p>
+                
+                <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto">
+                  {[
+                    "⏱️ The wait time is too long",
+                    "🔌 I found another charging station",
+                    "🚗 My plans changed",
+                    "❌ I ordered by mistake",
+                    "💬 Other..."
+                  ].map((reason, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCancelReason(reason)}
+                      className={`w-full text-left p-4 rounded-2xl border-2 font-bold transition-all ${cancelReason === reason ? 'border-[#1C1C1E] bg-gray-50 text-[#1C1C1E]' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => { setOrderToCancel(null); setCancelReason(""); }}
+                    className="flex-1 py-4 rounded-2xl bg-gray-100 text-[#1C1C1E] font-bold active:bg-gray-200"
+                  >
+                    Back
+                  </button>
+                  <button 
+                    onClick={submitCancellation}
+                    disabled={!cancelReason || isCancelling}
+                    className="flex-1 py-4 rounded-2xl bg-red-500 text-white font-bold disabled:opacity-50 disabled:bg-red-300 active:bg-red-600 flex justify-center items-center"
+                  >
+                    {isCancelling ? (
+                      <span className="animate-pulse">Cancelling...</span>
+                    ) : (
+                      "Confirm Cancel"
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Sticky Header */}
         {step !== 2 && (
           <motion.header 
@@ -1106,17 +1211,35 @@ if (!customerName || !customerPhone) {
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-8 pt-4 md:max-w-2xl md:mx-auto"
               >
-                {/* 🔴 LIVE ORDER TRACKER CARD */}
-          {activeOrder && (
-            <div className="w-full bg-[#1C1C1E] text-white rounded-3xl p-5 mb-6 shadow-2xl border border-gray-800">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-bold text-lg text-[#B5F573]">My FST Dispatch</h3>
-                <span className="bg-white/10 px-3 py-1 rounded-full text-sm font-bold animate-pulse">
-                  {activeOrder.status}
-                </span>
-              </div>
-              <p className="text-gray-400 font-medium">{activeOrder.vehicle}</p>
-              <p className="text-white font-bold">{activeOrder.date} • {activeOrder.energy}</p>
+                {/* 🔴 LIVE ORDER TRACKER CARDS (Swipeable Fleet List) */}
+          {activeOrders.length > 0 && (
+            <div className="w-full flex overflow-x-auto gap-4 pb-6 mb-2 snap-x hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {activeOrders.map((order, index) => (
+                <div key={index} className="min-w-[90%] md:min-w-[320px] bg-[#1C1C1E] text-white rounded-3xl p-5 shadow-2xl border border-gray-800 snap-center shrink-0 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-bold text-lg text-[#B5F573]">
+                        {language === 'fr' ? 'Ma Commande FST' : language === 'ar' ? 'طلبي من FST' : 'My FST Dispatch'}
+                      </h3>
+                      <span className="bg-white/10 px-3 py-1 rounded-full text-sm font-bold truncate max-w-[120px]">
+                        {translateStatus(order.status, language)}
+                      </span>
+                    </div>
+                    <p className="text-gray-400 font-medium mb-1">{order.vehicle}</p>
+                    <p className="text-white font-bold mb-4">{order.date} • {order.energy}</p>
+                  </div>
+                  
+                  {/* Cancel Button - Only shows if the order is still active! */}
+                  {!order.status.includes('Canceled') && !order.status.includes('Annulé') && (
+                    <button 
+                      onClick={() => setOrderToCancel(order)}
+                      className="w-full py-3 mt-auto rounded-xl bg-red-500/10 text-red-500 font-bold border border-red-500/20 active:bg-red-500/20 transition-colors text-sm uppercase tracking-wide"
+                    >
+                      {language === 'fr' ? 'Annuler la commande' : language === 'ar' ? 'إلغاء الطلب' : 'Cancel Dispatch'}
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
                 <div>
