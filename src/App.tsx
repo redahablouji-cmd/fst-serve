@@ -718,9 +718,9 @@ export default function App() {
       if (savedProfile) {
         const { savedName, savedPhone, savedEmail } = JSON.parse(savedProfile);
         
-        // Auto-fills your form fields using your exact state names
-        if (savedName && typeof setFullName === 'function') setFullName(savedName);
-        if (savedPhone && typeof setWhatsappNumber === 'function') setWhatsappNumber(savedPhone);
+        // Auto-fills using your exact background variable names!
+        if (savedName && typeof setName === 'function') setName(savedName);
+        if (savedPhone && typeof setPhone === 'function') setPhone(savedPhone);
         if (savedEmail && typeof setEmail === 'function') setEmail(savedEmail);
       }
     } catch (e) {
@@ -1039,8 +1039,8 @@ if (!customerName || !customerPhone) {
         localStorage.setItem('fst_orders_list', JSON.stringify(currentOrders));
 // --- 🚨 INVISIBLE ACCOUNT: Save details for next time! ---
         const userProfile = {
-          savedName: fullName,       
-          savedPhone: whatsappNumber, 
+          savedName: name,       
+          savedPhone: phone, 
           savedEmail: email          
         };
         localStorage.setItem('fst_user_profile', JSON.stringify(userProfile));
