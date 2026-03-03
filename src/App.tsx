@@ -706,6 +706,7 @@ export default function App() {
   // Cancel Modal States
   const [orderToCancel, setOrderToCancel] = useState<any>(null);
   const [cancelReason, setCancelReason] = useState<string>("");
+  const [customCancelText, setCustomCancelText] = useState<string>("");
   const [isCancelling, setIsCancelling] = useState(false);
 
   // Success Screen State
@@ -773,25 +774,33 @@ export default function App() {
 
   const submitCancellation = async () => {
     setIsCancelling(true);
+    
+    // 🚨 NEW: If they chose "Other", send what they typed!
+    const finalReason = cancelReason === "💬 Other..." 
+      ? `Other: ${customCancelText}` 
+      : cancelReason;
+
     try {
       const response = await fetch('/api/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderToCancel.id, reason: cancelReason })
+        body: JSON.stringify({ id: orderToCancel.id, reason: finalReason })
       });
       
       if (response.ok) {
-        // Instantly update the card on the screen!
         const updatedOrders = activeOrders.map(o => 
           o.id === orderToCancel.id ? { ...o, status: "⚫ Canceled" } : o
         );
         setActiveOrders(updatedOrders);
         localStorage.setItem('fst_orders_list', JSON.stringify(updatedOrders));
         
-        // Close modal
+        // Close modal and clean up memory
         setOrderToCancel(null);
         setCancelReason("");
+        setCustomCancelText("");
       } else {
+        const errorData = await response.json();
+        console.error("Vault Rejection:", errorData);
         alert("❌ Error connecting to Command Center.");
       }
     } catch (error) {
@@ -799,16 +808,6 @@ export default function App() {
     } finally {
       setIsCancelling(false);
     }
-  };
-  // 1. Helper to get next 7 days starting from today
-  const getAvailableDates = () => {
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      dates.push(d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
-    }
-    return dates;
   };
 
   // 2. Helper to get 24/7 times with 30-min gaps
@@ -1113,7 +1112,7 @@ if (!customerName || !customerPhone) {
                 <h3 className="text-2xl font-black text-[#1C1C1E] mb-2 uppercase tracking-tight">Cancel Dispatch</h3>
                 <p className="text-gray-500 font-medium mb-6">Please tell us why you are cancelling:</p>
                 
-                <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto">
+                <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto px-1 pb-2">
                   {[
                     "⏱️ The wait time is too long",
                     "🔌 I found another charging station",
@@ -1121,26 +1120,44 @@ if (!customerName || !customerPhone) {
                     "❌ I ordered by mistake",
                     "💬 Other..."
                   ].map((reason, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCancelReason(reason)}
-                      className={`w-full text-left p-4 rounded-2xl border-2 font-bold transition-all ${cancelReason === reason ? 'border-[#1C1C1E] bg-gray-50 text-[#1C1C1E]' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}
-                    >
-                      {reason}
-                    </button>
+                    <div key={idx}>
+                      <button
+                        onClick={() => setCancelReason(reason)}
+                        className={`w-full text-left p-4 rounded-2xl border-2 font-bold transition-all ${cancelReason === reason ? 'border-[#1C1C1E] bg-gray-50 text-[#1C1C1E]' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}
+                      >
+                        {reason}
+                      </button>
+                      
+                      {/* 🚨 NEW: The hidden text box that appears for "Other..." */}
+                      {reason === "💬 Other..." && cancelReason === "💬 Other..." && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }} 
+                          animate={{ opacity: 1, height: 'auto' }} 
+                          className="mt-3"
+                        >
+                          <textarea
+                            value={customCancelText}
+                            onChange={(e) => setCustomCancelText(e.target.value)}
+                            placeholder="Please explain the reason..."
+                            className="w-full p-4 rounded-2xl border-2 border-[#1C1C1E] bg-gray-50 text-[#1C1C1E] font-medium focus:outline-none focus:ring-2 focus:ring-[#B5F573] resize-none h-24"
+                          />
+                        </motion.div>
+                      )}
+                    </div>
                   ))}
                 </div>
 
                 <div className="flex gap-3">
                   <button 
-                    onClick={() => { setOrderToCancel(null); setCancelReason(""); }}
+                    onClick={() => { setOrderToCancel(null); setCancelReason(""); setCustomCancelText(""); }}
                     className="flex-1 py-4 rounded-2xl bg-gray-100 text-[#1C1C1E] font-bold active:bg-gray-200"
                   >
                     Back
                   </button>
                   <button 
                     onClick={submitCancellation}
-                    disabled={!cancelReason || isCancelling}
+                    // 🚨 NEW: Disables the button if they chose "Other" but haven't typed anything yet!
+                    disabled={!cancelReason || (cancelReason === "💬 Other..." && customCancelText.trim() === "") || isCancelling}
                     className="flex-1 py-4 rounded-2xl bg-red-500 text-white font-bold disabled:opacity-50 disabled:bg-red-300 active:bg-red-600 flex justify-center items-center"
                   >
                     {isCancelling ? (
