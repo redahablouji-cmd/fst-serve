@@ -821,7 +821,27 @@ export default function App() {
     }
     return times;
   };
+// 1. Helper to get next 7 days starting from today
+  const getAvailableDates = () => {
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      dates.push(d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+    }
+    return dates;
+  };
 
+  // 2. Helper to get 24/7 times with 30-min gaps
+  const getAvailableTimes = () => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      const hour = h.toString().padStart(2, '0');
+      times.push(`${hour}:00`);
+      times.push(`${hour}:30`);
+    }
+    return times;
+  };
   const availableDates = getAvailableDates();
   const availableTimes = getAvailableTimes();
   
