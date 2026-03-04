@@ -2088,6 +2088,57 @@ if (!customerName || !customerPhone) {
             </>
           )}
         </AnimatePresence>
+        {/* 🚨 FULL CHARGE HISTORY MODAL */}
+        <AnimatePresence>
+          {showHistoryModal && (
+            <motion.div 
+              key="history-modal"
+              className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-end justify-center"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            >
+              <motion.div 
+                className="bg-[#F5F5F7] w-full h-[85vh] md:max-w-md rounded-t-[40px] p-6 pb-12 flex flex-col shadow-2xl"
+                initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              >
+                <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-6 shrink-0" />
+                
+                <div className="flex justify-between items-center mb-6 px-2">
+                  <h3 className="text-2xl font-black text-[#1C1C1E] uppercase tracking-tight">All Charges</h3>
+                  <button 
+                    onClick={() => setShowHistoryModal(false)}
+                    className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-xl text-gray-600 active:bg-gray-300 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto space-y-3 px-2 pb-4">
+                  {activeOrders.length === 0 ? (
+                    <div className="text-center mt-10">
+                      <p className="text-gray-500 font-medium">No past charges found.</p>
+                    </div>
+                  ) : (
+                    activeOrders.map((order, idx) => (
+                      <div key={idx} className="bg-white p-5 rounded-[24px] flex flex-col gap-3 shadow-sm border border-gray-100">
+                         <div className="flex justify-between items-start">
+                            <span className="font-bold text-[#1C1C1E] text-lg">{order.vehicle}</span>
+                            <span className="text-xs font-bold px-3 py-1.5 bg-gray-100 text-[#1C1C1E] rounded-xl">
+                              {order.status}
+                            </span>
+                         </div>
+                         <div className="flex justify-between items-center text-sm font-medium text-gray-400">
+                            <span className="flex items-center gap-1">⏱️ {order.date}</span>
+                            <span className="flex items-center gap-1">⚡ {order.energy}</span>
+                         </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
