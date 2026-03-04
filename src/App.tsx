@@ -719,9 +719,11 @@ export default function App() {
         const { savedName, savedPhone, savedEmail } = JSON.parse(savedProfile);
         
         // Auto-fills using your exact background variable names!
-        if (savedName && typeof setName === 'function') setName(savedName);
-        if (savedPhone && typeof setPhone === 'function') setPhone(savedPhone);
-        if (savedEmail && typeof setEmail === 'function') setEmail(savedEmail);
+        if (savedName && typeof setCustomerName === 'function') setCustomerName(savedName);
+        if (savedPhone && typeof setCustomerPhone === 'function') setCustomerPhone(savedPhone);
+        
+        // Try setCustomerEmail (or setEmail if it fails!)
+        if (savedEmail && typeof setCustomerEmail === 'function') setCustomerEmail(savedEmail);
       }
     } catch (e) {
       console.error("Profile load error", e);
@@ -1039,9 +1041,9 @@ if (!customerName || !customerPhone) {
         localStorage.setItem('fst_orders_list', JSON.stringify(currentOrders));
 // --- 🚨 INVISIBLE ACCOUNT: Save details for next time! ---
         const userProfile = {
-          savedName: name,       
-          savedPhone: phone, 
-          savedEmail: email          
+          savedName: customerName,       
+          savedPhone: customerPhone, 
+          savedEmail: typeof customerEmail !== 'undefined' ? customerEmail : '' 
         };
         localStorage.setItem('fst_user_profile', JSON.stringify(userProfile));
         // 2. Trigger the "Approved" Popup!
