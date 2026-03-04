@@ -700,6 +700,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Data State
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   // --- 🚨 FLEET TRACKER STATE (Supports Multiple Orders) ---
   const [activeOrders, setActiveOrders] = useState<any[]>([]);
   
@@ -1269,7 +1270,7 @@ if (!customerName || !customerPhone) {
                 {/* 🔴 LIVE ORDER TRACKER CARDS (Swipeable Fleet List) */}
           {activeOrders.length > 0 && (
             <div className="w-full flex overflow-x-auto gap-4 pb-6 mb-2 snap-x hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {activeOrders.map((order, index) => (
+              {activeOrders.slice(0, 3).map((order, index) => (
                 <div key={index} className="min-w-[90%] md:min-w-[320px] bg-[#1C1C1E] text-white rounded-3xl p-5 shadow-2xl border border-gray-800 snap-center shrink-0 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-center mb-3">
@@ -1354,10 +1355,10 @@ if (!customerName || !customerPhone) {
                 </div>
 
                 <div className="bg-[#1C1C1E] rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#B5F573]/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-                  <div className="flex justify-between items-center mb-4 relative z-10">
-                    <div className="flex items-center gap-2">
-                      <History size={18} className="text-[#B5F573]" />
+<div className="absolute top-0 right-0 w-32 h-32 bg-[#B5F573]/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+<div onClick={() => setShowHistoryModal(true)} className="flex justify-between items-center mb-4 relative z-10 cursor-pointer">
+  <div className="flex items-center gap-2">
+    <History size={18} className="text-[#B5F573]" />
                       <span className="font-bold">{t.chargeHistory}</span>
                     </div>
                     <ChevronRight size={18} className="text-[#8E8E93]" />
