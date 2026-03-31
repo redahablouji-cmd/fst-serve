@@ -30,7 +30,7 @@ function TapToPinMarker({ locationCoords, setLocationCoords }: any) {
   );
 }
 // Auto-Pilot: Flies map to user the second it opens
- AutoLocate({ setLocationCoords }: any) {
+ function AutoLocate({ setLocationCoords }: any) {
   const map = useMapEvents({
     locationfound(e) {
       setLocationCoords({ lat: e.latlng.lat, lng: e.latlng.lng });
