@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import DriverApp from './DriverApp';
 
 let DefaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
@@ -29,7 +30,7 @@ function TapToPinMarker({ locationCoords, setLocationCoords }: any) {
   );
 }
 // Auto-Pilot: Flies map to user the second it opens
-function AutoLocate({ setLocationCoords }: any) {
+ AutoLocate({ setLocationCoords }: any) {
   const map = useMapEvents({
     locationfound(e) {
       setLocationCoords({ lat: e.latlng.lat, lng: e.latlng.lng });
@@ -627,6 +628,8 @@ const MapControls = ({ userLocation, isDraggingMap }: { userLocation: { lat: num
 // --- Main App ---
 
 export default function App() {
+  // 🚨 SECRET DRIVER TERMINAL ROUTE
+  if (window.location.search.includes('driver')) return <DriverApp />;
   const [isAppReady, setIsAppReady] = useState(false);
   
 // --- PWA Install Logic ---
