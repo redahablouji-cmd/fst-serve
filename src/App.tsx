@@ -797,11 +797,7 @@ const submitCancellation = async () => {
     setIsCancelling(true);
 
     try {
-      // 1. Get the reason they typed/selected
       const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
-
-      // 2. Get the Airtable ID of the order we are cancelling
-      // 🚨 VERIFY THIS: How do you save the active order? If it's saved in localStorage under a different name, change it here!
       const recordId = localStorage.getItem('fst_active_order_id');
 
       if (!recordId) {
@@ -810,9 +806,6 @@ const submitCancellation = async () => {
         return;
       }
 
-      // 3. Send the Cancel command to Airtable
-      // 🚨 VERIFY THIS: Look at your `handleSubmit` function (where you create orders). 
-      // Make sure your table name is actually "Orders". If it is "Dispatch" or "Charges", change the word "Orders" below!
       const response = await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${recordId}`, {
         method: 'PATCH',
         headers: {
@@ -821,17 +814,16 @@ const submitCancellation = async () => {
         },
         body: JSON.stringify({
           fields: {
-            "Status": "Canceled", // Must match your Airtable spelling exactly
+            "Status": "Canceled",
             "Reason": finalReason
           }
         })
       });
 
       if (!response.ok) {
-        throw new Error("Airtable rejected it. Check table name and keys.");
+        throw new Error("Airtable rejected it.");
       }
 
-      // 4. SUCCESS: Wipe the live screen, close popup, and refresh to show History
       localStorage.removeItem('fst_active_order_id');
       setShowCancelPopup(false);
       window.location.reload();
@@ -843,7 +835,6 @@ const submitCancellation = async () => {
       setIsCancelling(false);
     }
   };
-
       // 2. CLEAR IT FROM THE APP'S ACTIVE SCREEN
       localStorage.removeItem('fst_active_order_id');
       if (typeof setActiveOrder === 'function') setActiveOrder(null);
