@@ -629,7 +629,7 @@ const MapControls = ({ userLocation, isDraggingMap }: { userLocation: { lat: num
 
 export default function App() {
   // 🚨 SECRET DRIVER TERMINAL ROUTE
-  if (window.location.search.includes('driver')) return <DriverApp />;
+if (window.location.search.includes('driver')) return <Driver />;
   const [isAppReady, setIsAppReady] = useState(false);
   
 // --- PWA Install Logic ---
