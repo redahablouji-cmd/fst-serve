@@ -1,4 +1,6 @@
 {
+  "id": "/fst-driver-system",
+  "scope": "/driver",
   "name": "FST Driver",
   "short_name": "FST Driver",
   "description": "Logistics and Dispatch for FST Serve",
