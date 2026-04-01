@@ -1020,7 +1020,7 @@ if (!customerName || !customerPhone) {
       };
 
       // 3. Direct Airtable Bypass (Frontend to Database)
-  // Keys are securely pulled from Vercel's environment variables
+    // Keys are securely pulled from Vercel using the VITE_ prefix
     const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY; 
     const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
 
@@ -1053,14 +1053,14 @@ if (!customerName || !customerPhone) {
       })
     });
 
-    if (response.ok) {
-      const airtableData = await response.json();
-      // Translate Airtable's receipt into the exact format your app expects
-      const responseData = { recordId: airtableData.records[0].id };
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Airtable Rejection:", errorText);
+      throw new Error("Airtable rejected the payload");
+    }
 
-        // --- 🚨 NEW: Adds the new order to their Fleet List ---
-        const savedList = localStorage.getItem('fst_orders_list');
-        const currentOrders = savedList ? JSON.parse(savedList) : [];
+    const airtableData = await response.json();
+    const responseData = { recordId: airtableData.records[0].id };
         
         const myActiveOrder = {
           id: responseData.recordId, 
