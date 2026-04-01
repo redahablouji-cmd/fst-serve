@@ -1020,8 +1020,9 @@ if (!customerName || !customerPhone) {
       };
 
       // 3. Direct Airtable Bypass (Frontend to Database)
-    const AIRTABLE_API_KEY = "PASTE_YOUR_API_KEY_HERE"; 
-    const AIRTABLE_BASE_ID = "PASTE_YOUR_BASE_ID_HERE";
+  // Keys are securely pulled from Vercel's environment variables
+    const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY; 
+    const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
 
     const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Orders`, {
       method: 'POST',
