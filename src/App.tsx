@@ -793,44 +793,35 @@ if (window.location.search.includes('driver')) return <Driver />;
     return status; // Default English
   };
 
-const submitCancellation = async () => {
+cconst submitCancellation = async () => {
     setIsCancelling(true);
-
     try {
       const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
-      const recordId = localStorage.getItem('fst_active_order_id');
+      const orderId = activeOrder?.id || localStorage.getItem('fst_active_order_id');
 
-      if (!recordId) {
-        alert("Error: App lost the order ID memory.");
-        setIsCancelling(false);
-        return;
-      }
-
-      const response = await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${recordId}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          fields: {
-            "Status": "Canceled",
-            "Reason": finalReason
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("Airtable rejected it.");
+      if (orderId) {
+        await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: {
+              "Status": "Canceled",
+              "Reason": finalReason
+            }
+          })
+        });
       }
 
       localStorage.removeItem('fst_active_order_id');
+      if (typeof setActiveOrder === 'function') setActiveOrder(null);
       setShowCancelPopup(false);
       window.location.reload();
-
     } catch (error) {
-      console.error("Cancellation error:", error);
-      alert("Network error: Could not cancel.");
+      console.error("Cancellation failed:", error);
+      alert("Failed to cancel. Please check your connection.");
     } finally {
       setIsCancelling(false);
     }
