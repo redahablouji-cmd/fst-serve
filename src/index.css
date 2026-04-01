@@ -9,14 +9,40 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
+/* --- 1. NATIVE APP LOCKDOWN --- */
 @layer base {
-  body {
-    @apply bg-ios-bg text-ios-text overflow-hidden antialiased;
+  html, body, #root {
+    /* Critical: Stops the 'sliding' and 'bouncing' effect */
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; 
+    position: fixed; 
+    overscroll-behavior: none; 
+    
+    background-color: var(--color-ios-bg);
+    color: var(--color-ios-text);
     font-family: var(--font-sans);
-    background-color: #f0f0f0; /* Outer background to show the mobile container */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    /* Prevents the grey box when tapping buttons on mobile */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
 }
 
+/* --- 2. LAYOUT SCROLLING --- */
+/* This allows only the content area to scroll, while the header stays fixed */
+main {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth iOS momentum scrolling */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* --- 3. iOS DESIGN SYSTEM --- */
 .ios-shadow {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
 }
@@ -26,7 +52,7 @@
 }
 
 .rounded-ios-input {
-  border-radius: 20px;
+  border-radius: 12px;
 }
 
 .rounded-ios-btn {
@@ -59,13 +85,12 @@ input[type="range"].ios-slider::-webkit-slider-thumb {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
-/* Hide scrollbars */
+/* Hide scrollbars for a clean look */
 ::-webkit-scrollbar {
   display: none;
 }
 
 * {
-  -webkit-tap-highlight-color: transparent;
   outline: none;
 }
 
@@ -76,7 +101,8 @@ input[type="range"].ios-slider::-webkit-slider-thumb {
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
-/* PWA Hide Rule - Kills the install button inside the app */
+
+/* PWA Hide Rule - Kills the install button inside the app once installed */
 @media all and (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
   .pwa-hide {
     display: none !important;
