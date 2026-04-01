@@ -1019,15 +1019,43 @@ if (!customerName || !customerPhone) {
         reason: chargeReason || "Convenience"
       };
 
-      // 3. Securely send to Airtable Command Center
-      const response = await fetch('/api/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
+      // 3. Direct Airtable Bypass (Frontend to Database)
+    const AIRTABLE_API_KEY = "PASTE_YOUR_API_KEY_HERE"; 
+    const AIRTABLE_BASE_ID = "PASTE_YOUR_BASE_ID_HERE";
 
-      if (response.ok) {
-        const responseData = await response.json();
+    const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Orders`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        records: [
+          {
+            fields: {
+              "Name": orderData.name,
+              "Phone": orderData.phone,
+              "Email": orderData.email,
+              "Status": orderData.status,
+              "Date": orderData.date,
+              "Time": orderData.time_only,
+              "Vehicle": orderData.vehicle,
+              "Location": orderData.location,
+              "Loc Notes": orderData.location_notes,
+              "Energy": orderData.energy,
+              "Price": orderData.price,
+              "Notes": orderData.notes,
+              "Reason": orderData.reason
+            }
+          }
+        ]
+      })
+    });
+
+    if (response.ok) {
+      const airtableData = await response.json();
+      // Translate Airtable's receipt into the exact format your app expects
+      const responseData = { recordId: airtableData.records[0].id };
 
         // --- 🚨 NEW: Adds the new order to their Fleet List ---
         const savedList = localStorage.getItem('fst_orders_list');
