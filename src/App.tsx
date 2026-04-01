@@ -793,40 +793,49 @@ if (window.location.search.includes('driver')) return <Driver />;
     return status; // Default English
   };
 
-  const submitCancellation = async () => {
-    setIsCancelling(true);
+const submitCancellation = async () => {
+    setIsCancelling(true); // Starts the loading animation on your red button
     
-    // 🚨 BUG FIX 1: Bulletproof check to grab your custom text!
-    const finalReason = cancelReason.includes("Other") 
-      ? `Other: ${customCancelText}` 
-      : cancelReason;
-
     try {
-      const response = await fetch('/api/cancel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // 🚨 MAKE SURE this line says 'reason: finalReason'
-        body: JSON.stringify({ id: orderToCancel.id, reason: finalReason })
-      });
+      const API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
+      const BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
       
-      if (response.ok) {
-        const updatedOrders = activeOrders.map(o => 
-          o.id === orderToCancel.id ? { ...o, status: "⚫ Canceled" } : o
-        );
-        setActiveOrders(updatedOrders);
-        localStorage.setItem('fst_orders_list', JSON.stringify(updatedOrders));
-        
-        // 🚨 WIPE THE CANCEL MODAL CLEAN
-        setOrderToCancel(null);
-        setCancelReason("");
-        setCustomCancelText("");
-      } else {
-        const errorData = await response.json();
-        console.error("Vault Rejection:", errorData);
-        alert("❌ Error connecting to Command Center.");
+      // Get the active order ID
+      const orderId = activeOrder?.id || localStorage.getItem('fst_active_order_id');
+
+      if (orderId) {
+        // Get the exact reason they picked
+        const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
+
+        // 1. UPDATE AIRTABLE
+        await fetch(`https://api.airtable.com/v0/${BASE_ID}/Orders/${orderId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: {
+              "Status": "Canceled", // 🚨 Change to "Cancelled" with two L's if that's how it's spelled in Airtable
+              "Reason": finalReason
+            }
+          })
+        });
       }
+
+      // 2. CLEAR IT FROM THE APP'S ACTIVE SCREEN
+      localStorage.removeItem('fst_active_order_id');
+      if (typeof setActiveOrder === 'function') setActiveOrder(null);
+      
+      // Close the popup
+      setShowCancelPopup(false);
+
+      // 3. REFRESH TO SHOW IN HISTORY
+      window.location.reload();
+
     } catch (error) {
-      console.error(error);
+      console.error("Cancellation failed:", error);
+      alert("Failed to cancel. Please check your connection.");
     } finally {
       setIsCancelling(false);
     }
