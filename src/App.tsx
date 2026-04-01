@@ -795,53 +795,37 @@ if (window.location.search.includes('driver')) return <Driver />;
 
 const submitCancellation = async () => {
     setIsCancelling(true);
-    try {
-      const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
-      const orderId = activeOrder?.id || localStorage.getItem('fst_active_order_id');
+    
+    const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
+    const orderId = activeOrder?.id || localStorage.getItem('fst_active_order_id');
 
-      if (orderId) {
-        await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            fields: {
-              "Status": "Canceled",
-              "Reason": finalReason
-            }
-          })
-        });
-      }
-
-      localStorage.removeItem('fst_active_order_id');
-      if (typeof setActiveOrder === 'function') setActiveOrder(null);
-      setShowCancelPopup(false);
-      window.location.reload();
-    } catch (error) {
-      console.error("Cancellation failed:", error);
-      alert("Failed to cancel. Please check your connection.");
-    } finally {
-      setIsCancelling(false);
+    if (orderId) {
+      // 1. Send to Airtable
+      await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fields: {
+            "Status": "Canceled",
+            "Reason": finalReason
+          }
+        })
+      }).catch((error) => {
+        console.error("Airtable update failed:", error);
+      });
     }
-  };
-      // 2. CLEAR IT FROM THE APP'S ACTIVE SCREEN
-      localStorage.removeItem('fst_active_order_id');
-      if (typeof setActiveOrder === 'function') setActiveOrder(null);
-      
-      // Close the popup
-      setShowCancelPopup(false);
 
-      // 3. REFRESH TO SHOW IN HISTORY
-      window.location.reload();
-
-    } catch (error) {
-      console.error("Cancellation failed:", error);
-      alert("Failed to cancel. Please check your connection.");
-    } finally {
-      setIsCancelling(false);
-    }
+    // 2. Clear app memory, close popup, stop loading
+    localStorage.removeItem('fst_active_order_id');
+    if (typeof setActiveOrder === 'function') setActiveOrder(null);
+    setShowCancelPopup(false);
+    setIsCancelling(false);
+    
+    // 3. Refresh app to drop order into History
+    window.location.reload();
   };
 
   // 2. Helper to get 24/7 times with 30-min gaps
