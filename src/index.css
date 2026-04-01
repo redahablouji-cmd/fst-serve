@@ -12,24 +12,15 @@
 /* --- 1. NATIVE APP LOCKDOWN --- */
 @layer base {
   html, body, #root {
-    /* Critical: Stops the 'sliding' and 'bouncing' effect */
     height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden; 
-    position: fixed; 
-    overscroll-behavior: none; 
-    
+    /* 🚨 UNLOCKED: Users can slide and scroll normally now */
     background-color: var(--color-ios-bg);
     color: var(--color-ios-text);
     font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    
-    /* Prevents the grey box when tapping buttons on mobile */
     -webkit-tap-highlight-color: transparent;
-    user-select: none;
   }
 }
 
