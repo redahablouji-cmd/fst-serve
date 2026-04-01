@@ -72,7 +72,6 @@ export default function Driver() {
   );
 
   return (
-    return (
     /* 🚨 DRIVER LOCKDOWN: fixed, inset-0, and overflow-hidden strictly apply only to this page */
     <div className="fixed inset-0 bg-gray-100 w-full h-full overflow-hidden font-sans text-gray-900 flex flex-col">
       <header className="bg-white px-6 py-5 border-b border-gray-200 flex justify-center sticky top-0 z-50">
