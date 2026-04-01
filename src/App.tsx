@@ -794,34 +794,55 @@ if (window.location.search.includes('driver')) return <Driver />;
   };
 
 const submitCancellation = async () => {
-    setIsCancelling(true); // Starts the loading animation on your red button
-    
+    setIsCancelling(true);
+
     try {
-      const API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
-      const BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
-      
-      // Get the active order ID
-      const orderId = activeOrder?.id || localStorage.getItem('fst_active_order_id');
+      // 1. Get the reason they typed/selected
+      const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
 
-      if (orderId) {
-        // Get the exact reason they picked
-        const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
+      // 2. Get the Airtable ID of the order we are cancelling
+      // 🚨 VERIFY THIS: How do you save the active order? If it's saved in localStorage under a different name, change it here!
+      const recordId = localStorage.getItem('fst_active_order_id');
 
-        // 1. UPDATE AIRTABLE
-        await fetch(`https://api.airtable.com/v0/${BASE_ID}/Orders/${orderId}`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            fields: {
-              "Status": "Canceled", // 🚨 Change to "Cancelled" with two L's if that's how it's spelled in Airtable
-              "Reason": finalReason
-            }
-          })
-        });
+      if (!recordId) {
+        alert("Error: App lost the order ID memory.");
+        setIsCancelling(false);
+        return;
       }
+
+      // 3. Send the Cancel command to Airtable
+      // 🚨 VERIFY THIS: Look at your `handleSubmit` function (where you create orders). 
+      // Make sure your table name is actually "Orders". If it is "Dispatch" or "Charges", change the word "Orders" below!
+      const response = await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${recordId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fields: {
+            "Status": "Canceled", // Must match your Airtable spelling exactly
+            "Reason": finalReason
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Airtable rejected it. Check table name and keys.");
+      }
+
+      // 4. SUCCESS: Wipe the live screen, close popup, and refresh to show History
+      localStorage.removeItem('fst_active_order_id');
+      setShowCancelPopup(false);
+      window.location.reload();
+
+    } catch (error) {
+      console.error("Cancellation error:", error);
+      alert("Network error: Could not cancel.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
       // 2. CLEAR IT FROM THE APP'S ACTIVE SCREEN
       localStorage.removeItem('fst_active_order_id');
