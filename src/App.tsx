@@ -1045,8 +1045,8 @@ if (!customerName || !customerPhone) {
             "Energy": orderData.energy,
             "Price": orderData.price,
             "Notes": orderData.notes,
-            "Reason": orderData.reason
-            "Plate": plateNumber, // 🚨 This sends the plate to Airtable
+            "Reason": orderData.reason, // 🚨 ADD THIS COMMA AT THE END!
+            "Plate": plateNumber || "NOT PROVIDED" 
           }
         }],
         typecast: true 
