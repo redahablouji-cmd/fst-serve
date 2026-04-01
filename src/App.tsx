@@ -1263,7 +1263,7 @@ if (!customerName || !customerPhone) {
           </motion.header>
         )}
 
-        <main ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-32 pt-4 scroll-smooth scrollbar-hide">
+        <main ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-[160px] pt-4 scroll-smooth scrollbar-hide">
           <AnimatePresence mode="wait">
             
             {/* STEP 1: HOME */}
