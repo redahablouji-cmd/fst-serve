@@ -889,6 +889,7 @@ if (window.location.search.includes('driver')) return <Driver />;
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [plateNumber, setPlateNumber] = useState('');
 // The Nuclear Wiper: Hard resets the entire app instantly
   const resetOrder = () => {
     window.location.reload(); 
@@ -1045,6 +1046,7 @@ if (!customerName || !customerPhone) {
             "Price": orderData.price,
             "Notes": orderData.notes,
             "Reason": orderData.reason
+            "Plate": plateNumber, // 🚨 This sends the plate to Airtable
           }
         }],
         typecast: true 
