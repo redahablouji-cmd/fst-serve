@@ -830,6 +830,7 @@ if (window.location.search.includes('driver')) return <Driver />;
     } finally {
       setIsCancelling(false);
     }
+    window.location.reload();
   };
 
   // 2. Helper to get 24/7 times with 30-min gaps
