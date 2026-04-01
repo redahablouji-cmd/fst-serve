@@ -1,7 +1,9 @@
 {
+  "id": "/fst-user-booking",
+  "scope": "/",
   "name": "FST SERVE",
   "short_name": "FST SERVE",
-  "description": "Premium on-demand EV charging service in Morocco.",
+  "description": "Premium on-demand EV charging service.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#B5F573",
