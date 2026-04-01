@@ -797,10 +797,11 @@ const submitCancellation = async () => {
     setIsCancelling(true);
     
     const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
+    
+    // Grab the ID. Make sure 'fst_active_order_id' is exactly how you save it when ordering!
     const orderId = activeOrder?.id || localStorage.getItem('fst_active_order_id');
 
     if (orderId) {
-      // 1. Send to Airtable
       await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
         method: 'PATCH',
         headers: {
@@ -809,44 +810,28 @@ const submitCancellation = async () => {
         },
         body: JSON.stringify({
           fields: {
-            "Status": "Canceled",
+            "Status": "Canceled", // Spelled with one L to match your Airtable
             "Reason": finalReason
           }
         })
-      }).catch((error) => {
-        console.error("Airtable update failed:", error);
-      });
+      }).then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Airtable blocked the update:", errorData);
+        }
+      }).catch((error) => console.error("Network error:", error));
+    } else {
+      console.error("CRITICAL: App does not know the order ID to cancel.");
     }
 
-    // 2. Clear app memory, close popup, stop loading
+    // Clear app memory & close popup
     localStorage.removeItem('fst_active_order_id');
     if (typeof setActiveOrder === 'function') setActiveOrder(null);
     setShowCancelPopup(false);
     setIsCancelling(false);
     
-    // 3. Refresh app to drop order into History
+    // Refresh app to jump to home screen and drop it into History
     window.location.reload();
-  };
-
-  // 2. Helper to get 24/7 times with 30-min gaps
-  const getAvailableTimes = () => {
-    const times = [];
-    for (let h = 0; h < 24; h++) {
-      const hour = h.toString().padStart(2, '0');
-      times.push(`${hour}:00`);
-      times.push(`${hour}:30`);
-    }
-    return times;
-  };
-// 1. Helper to get next 7 days starting from today
-  const getAvailableDates = () => {
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      dates.push(d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
-    }
-    return dates;
   };
 
   const availableDates = getAvailableDates();
