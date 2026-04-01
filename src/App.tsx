@@ -1715,7 +1715,7 @@ if (!customerName || !customerPhone) {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6 md:max-w-2xl md:mx-auto"
+                className="space-y-6 md:max-w-2xl md:mx-auto pb-32"
               >
                 <div className="bg-[#F5F5F7] rounded-3xl p-6 space-y-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-[#B5F573]/20 rounded-full blur-3xl -mr-10 -mt-10"></div>
@@ -1758,6 +1758,16 @@ if (!customerName || !customerPhone) {
                         <p className="text-xs text-[#8E8E93]">{selectedTime || 'ASAP'}</p>
                       </div>
                     </div>
+                    {/* 🚨 NEW: Plate Number in Review */}
+<div className="flex items-start gap-3 mt-4">
+  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+  </div>
+  <div>
+    <p className="text-xs font-bold text-[#8E8E93] uppercase">Plate Number</p>
+    <p className="font-bold text-[#1C1C1E]">{plateNumber || 'Not Provided'}</p>
+  </div>
+</div>
                   </div>
                   {/* CRM CAPTURE FORM */}
             <div className="space-y-3 mt-6 mb-6 bg-[#F5F5F7] p-5 rounded-2xl border border-gray-200">
@@ -1783,6 +1793,13 @@ if (!customerName || !customerPhone) {
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 className="w-full p-4 rounded-xl border-2 border-transparent focus:border-[#B5F573] focus:bg-white bg-white outline-none transition-all font-medium text-[#1C1C1E]"
               />
+              <input 
+  type="text"
+  placeholder="Plate Number (Optional)"
+  value={plateNumber}
+  onChange={(e) => setPlateNumber(e.target.value)}
+  className="w-full p-4 rounded-xl border-2 border-transparent focus:border-[#B5F573] focus:bg-white bg-white outline-none transition-all font-medium text-[#1C1C1E] mt-3"
+/>
             </div>
 
                   <div className="pt-6 border-t border-[#1C1C1E]/5 flex justify-between items-end">
@@ -1802,53 +1819,57 @@ if (!customerName || !customerPhone) {
           </AnimatePresence>
         </main>
 
-        {/* Bottom Action Button */}
-        {step !== 2 && (
-          <footer className="absolute bottom-0 left-0 w-full px-6 pb-10 pt-4 bg-white/80 backdrop-blur-xl border-t border-[#F5F5F7] z-40">
-            {step === 3 && (
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={() => {
-                  if (!selectedBrand) {
-                    openVehicleSheet();
-                    return;
-                  }
-                  setStep(4);
-                }}
-                className="w-full md:max-w-2xl md:mx-auto bg-[#1C1C1E] text-white font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg block"
-              >
-                {t.nextStep}
-              </motion.button>
-            )}
+        {/* Bottom Action Button - FIXED VERSION */}
+{step !== 2 && (
+  <footer className="fixed bottom-0 left-0 w-full px-6 pb-10 pt-4 bg-white/90 backdrop-blur-xl border-t border-[#F5F5F7] z-[100] shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+    {step === 3 && (
+      <motion.button
+        whileTap={{ scale: 0.96 }}
+        onClick={() => {
+          if (!selectedBrand) {
+            openVehicleSheet();
+            return;
+          }
+          setStep(4);
+        }}
+        className="w-full md:max-w-2xl md:mx-auto bg-[#1C1C1E] text-white font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg"
+      >
+        {t.nextStep}
+      </motion.button>
+    )}
 
-            {step === 4 && (
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={() => setStep(5)}
-                disabled={!selectedTime}
-                className={`w-full md:max-w-2xl md:mx-auto font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all block ${
-                  selectedTime ? 'bg-[#1C1C1E] text-white' : 'bg-[#F5F5F7] text-[#8E8E93]'
-                }`}
-              >
-                {t.reviewBooking}
-              </motion.button>
-            )}
+    {step === 4 && (
+      <motion.button
+        whileTap={{ scale: 0.96 }}
+        onClick={() => setStep(5)}
+        disabled={!selectedTime}
+        className={`w-full md:max-w-2xl md:mx-auto font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all ${
+          selectedTime ? 'bg-[#1C1C1E] text-white' : 'bg-[#F5F5F7] text-[#8E8E93]'
+        }`}
+      >
+        {t.reviewBooking}
+      </motion.button>
+    )}
 
-            {step === 5 && (
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={handleConfirm}
-                disabled={!locationCoords}
-                className={`w-full md:max-w-2xl md:mx-auto font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(181,245,115,0.4)] transition-all block ${
-                  locationCoords ? 'bg-[#B5F573] text-[#1C1C1E]' : 'bg-[#F5F5F7] text-[#8E8E93]'
-                }`}
-              >
-                <CheckCircle2 size={20} />
-                {isSubmitting ? "Processing..." : t.requestCharge}
-              </motion.button>
-            )}
-          </footer>
+    {step === 5 && (
+      <motion.button
+        whileTap={{ scale: 0.96 }}
+        onClick={handleConfirm}
+        disabled={!locationCoords || isSubmitting}
+        className={`w-full md:max-w-2xl md:mx-auto font-bold text-[17px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(181,245,115,0.4)] transition-all ${
+          locationCoords ? 'bg-[#B5F573] text-[#1C1C1E]' : 'bg-[#F5F5F7] text-[#8E8E93]'
+        }`}
+      >
+        {isSubmitting ? (
+          <div className="w-5 h-5 border-2 border-[#1C1C1E] border-t-transparent rounded-full animate-spin"></div>
+        ) : (
+          <CheckCircle2 size={20} />
         )}
+        {isSubmitting ? "Processing..." : t.requestCharge}
+      </motion.button>
+    )}
+  </footer>
+)}
 
         {/* Vehicle Bottom Sheet */}
         <AnimatePresence>
