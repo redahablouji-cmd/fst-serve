@@ -1263,7 +1263,7 @@ if (!customerName || !customerPhone) {
           </motion.header>
         )}
 
-        <main ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-[160px] pt-4 scroll-smooth scrollbar-hide">
+        <main ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-48 pt-4 scroll-smooth scrollbar-hide">
           <AnimatePresence mode="wait">
             
             {/* STEP 1: HOME */}
@@ -1817,6 +1817,8 @@ if (!customerName || !customerPhone) {
             )}
 
           </AnimatePresence>
+          {/* 🚨 This invisible spacer creates the white gap you want */}
+  <div className="h-40 w-full shrink-0"></div>
         </main>
 
         {/* Bottom Action Button - FIXED VERSION */}
