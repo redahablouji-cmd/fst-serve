@@ -793,7 +793,7 @@ if (window.location.search.includes('driver')) return <Driver />;
     return status; // Default English
   };
 
-cconst submitCancellation = async () => {
+const submitCancellation = async () => {
     setIsCancelling(true);
     try {
       const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
