@@ -1019,92 +1019,66 @@ if (!customerName || !customerPhone) {
         reason: chargeReason || "Convenience"
       };
 
-      // 3. Direct Airtable Bypass (Frontend to Database)
-    // Keys are securely pulled from Vercel using the VITE_ prefix
-    const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY; 
-    const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
+      // --- 3. Direct Airtable Connection (Vite-Ready) ---
+    const API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY; 
+    const BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
 
-    const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Orders`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/Orders`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+        'Authorization': `Bearer ${API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        records: [
-          {
-            fields: {
-              "Name": orderData.name,
-              "Phone": orderData.phone,
-              "Email": orderData.email,
-              "Status": orderData.status,
-              "Date": orderData.date,
-              "Time": orderData.time_only,
-              "Vehicle": orderData.vehicle,
-              "Location": orderData.location,
-              "Loc Notes": orderData.location_notes,
-              "Energy": orderData.energy,
-              "Price": orderData.price,
-              "Notes": orderData.notes,
-              "Reason": orderData.reason
-            }
+        records: [{
+          fields: {
+            "Name": orderData.name,
+            "Phone": orderData.phone,
+            "Email": orderData.email,
+            "Status": orderData.status,
+            "Date": orderData.date,
+            "Time": orderData.time_only,
+            "Vehicle": orderData.vehicle,
+            "Location": orderData.location,
+            "Loc Notes": orderData.location_notes,
+            "Energy": orderData.energy,
+            "Price": orderData.price,
+            "Notes": orderData.notes,
+            "Reason": orderData.reason
           }
-        ]
+        }],
+        typecast: true 
       })
     });
 
-    if (!response.ok) {
+    if (response.ok) {
+      const airtableResult = await response.json();
+      const responseData = { recordId: airtableResult.records[0].id };
+
+      // --- 4. Success UI Actions ---
+      setShowApproved(true);
+
+      setTimeout(() => {
+        setShowApproved(false);
+        setStep(1); 
+        const encodedMsg = encodeURIComponent(whatsappMessage);
+        window.location.href = `https://wa.me/212666126924?text=${encodedMsg}`;
+        
+        setTimeout(() => window.location.reload(), 1000);
+      }, 1000);
+
+    } else {
       const errorText = await response.text();
       console.error("Airtable Rejection:", errorText);
-      throw new Error("Airtable rejected the payload");
+      alert("❌ Error connecting to Command Center. Airtable rejected the data.");
     }
-
-    const airtableData = await response.json();
-    const responseData = { recordId: airtableData.records[0].id };
-        
-        const myActiveOrder = {
-          id: responseData.recordId, 
-          date: new Date().toLocaleDateString(),
-          vehicle: `${brand} ${model}`,
-          energy: energyDisplay,
-          status: "🔴 Pending"
-        };
-        
-        currentOrders.unshift(myActiveOrder); // Adds newest order to the top!
-        localStorage.setItem('fst_orders_list', JSON.stringify(currentOrders));
-// --- 🚨 INVISIBLE ACCOUNT: Save details for next time! ---
-        const userProfile = {
-          savedName: customerName,       
-          savedPhone: customerPhone, 
-          savedEmail: typeof customerEmail !== 'undefined' ? customerEmail : '' 
-        };
-        localStorage.setItem('fst_user_profile', JSON.stringify(userProfile));
-        // 2. Trigger the "Approved" Popup!
-        setShowApproved(true);
-
-        // 3. Wait exactly 1 second, and jump to WhatsApp
-        setTimeout(() => {
-          setShowApproved(false);
-          setStep(1); // Force the background app back to Home!
-          
-          const encodedMsg = encodeURIComponent(whatsappMessage);
-          window.location.href = `https://wa.me/212666126924?text=${encodedMsg}`;
-          
-          // 🚨 THE ULTIMATE CLEANUP: Forces a fresh browser load behind the scenes!
-          // This automatically wipes all form memory (brand, model, location) flawlessly.
-          setTimeout(() => window.location.reload(), 1000);
-        }, 1000);
-        
-      } else {
-        alert("❌ Error connecting to Command Center. Airtable rejected the data.");
-      }
-    } catch (error) {
-      console.error("Vault Error:", error);
-      alert("❌ Connection failed.");
-    } finally {
-      setIsSubmitting(false); // Always unlock the button at the end
-    }
-  };
+  } catch (error) {
+    console.error("Vault Error:", error);
+    alert("❌ Connection failed.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const openVehicleSheet = () => {
     setSheetStep('brand');
