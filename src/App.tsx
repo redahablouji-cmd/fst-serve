@@ -799,23 +799,11 @@ const submitCancellation = async () => {
     // Safely get the reason
     const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
     
-    // 1. Load your new Fleet memory list
-    let currentOrders = [];
-    const savedList = localStorage.getItem('fst_orders_list');
-    if (savedList) {
-      currentOrders = JSON.parse(savedList);
-    }
-
-    // Safely get the ID (Checks old memory first, then the new list)
-    let orderId = localStorage.getItem('fst_active_order_id');
-    if (!orderId && currentOrders.length > 0) {
-      const activeOrder = currentOrders.find(o => !o.status.includes('Canceled'));
-      if (activeOrder) orderId = activeOrder.id;
-    }
+    // Safely get the ID
+    const orderId = localStorage.getItem('fst_active_order_id');
 
     if (orderId) {
       try {
-        // 2. Patch Airtable
         await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
           method: 'PATCH',
           headers: {
@@ -830,26 +818,29 @@ const submitCancellation = async () => {
           })
         });
 
-        // 3. 🚨 THE FIX: Update the memory list to "Canceled" so the UI moves it to History!
-        const updatedOrders = currentOrders.map(order => {
-           if (order.id === orderId) {
-              return { ...order, status: 'Canceled' }; // Instantly turns the badge gray
-           }
-           return order;
-        });
-        localStorage.setItem('fst_orders_list', JSON.stringify(updatedOrders));
+        // 🚨 INSTANT GRAY BADGE FIX (100% Crash-Proof)
+        // This safely updates the Fleet List memory so the History tab knows it's cancelled
+        const savedList = localStorage.getItem('fst_orders_list');
+        if (savedList) {
+          let list = JSON.parse(savedList);
+          // Only attempts to update if it's a valid list, preventing the white screen crash
+          if (Array.isArray(list)) {
+            list = list.map(o => o.id === orderId ? { ...o, status: 'Canceled' } : o);
+            localStorage.setItem('fst_orders_list', JSON.stringify(list));
+          }
+        }
 
       } catch (error) {
         console.error("Airtable update failed:", error);
       }
     }
 
-    // Safely clear old variables and close the popup
+    // Safely clear the memory and close the popup
     localStorage.removeItem('fst_active_order_id');
     setShowCancelPopup(false);
     setIsCancelling(false);
     
-    // 4. Refresh the app to show the updated History
+    // Refresh the app to show the history
     window.location.reload();
   };
 
