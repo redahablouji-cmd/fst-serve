@@ -818,15 +818,15 @@ if (window.location.search.includes('driver')) return <Driver />;
 const submitCancellation = async () => {
     setIsCancelling(true);
     
-    // Get the reason
     const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
     
-    // Get the active order ID
-    const orderId = localStorage.getItem('fst_active_order_id');
+    // 1. Get the exact ID of the specific order they clicked to cancel
+    // (Checks orderToCancel state first, falls back to local memory if needed)
+    const orderId = (orderToCancel && orderToCancel.id) ? orderToCancel.id : localStorage.getItem('fst_active_order_id');
 
     if (orderId) {
       try {
-        // 1. Only change the status in Airtable
+        // 2. Send the "Canceled" status directly to Airtable
         await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
           method: 'PATCH',
           headers: {
@@ -840,17 +840,32 @@ const submitCancellation = async () => {
             }
           })
         });
+
+        // 3. Instantly update the Fleet List memory so it moves to History
+        const savedList = localStorage.getItem('fst_orders_list');
+        if (savedList) {
+          let list = JSON.parse(savedList);
+          if (Array.isArray(list)) {
+            // Find the specific canceled order and change its status to "Canceled"
+            const updatedList = list.map(o => o.id === orderId ? { ...o, status: 'Canceled' } : o);
+            localStorage.setItem('fst_orders_list', JSON.stringify(updatedList));
+            
+            // Update the live React state so the UI moves it without a page reload
+            if (typeof setActiveOrders === 'function') {
+              setActiveOrders(updatedList);
+            }
+          }
+        }
       } catch (error) {
         console.error("Airtable update failed:", error);
       }
     }
 
-    // 2. Close the popup and stop the button loading animation
-    setShowCancelPopup(false);
+    // 4. Close the popup, stop loading, and clear the old single-order memory
     setIsCancelling(false);
-    
-    // 🚨 NO PAGE RELOAD. NO MEMORY WIPING.
-    // Your 5-second tracker will automatically see the Airtable change and update the UI!
+    if (typeof setOrderToCancel === 'function') setOrderToCancel(null);
+    if (typeof setShowCancelPopup === 'function') setShowCancelPopup(false);
+    localStorage.removeItem('fst_active_order_id');
   };
 
   const availableDates = getAvailableDates();
