@@ -2175,7 +2175,7 @@ if (!customerName || !customerPhone) {
                       <p className="text-gray-500 font-medium">No past charges found.</p>
                     </div>
                   ) : (
-                    activeOrders.map((order, idx) => (
+                    {activeOrders.filter(order => order.status && !order.status.includes('Canceled')).map((order, index) => (
                       <div key={idx} className="bg-white p-5 rounded-[24px] flex flex-col gap-3 shadow-sm border border-gray-100">
                          <div className="flex justify-between items-start">
                             <span className="font-bold text-[#1C1C1E] text-lg">{order.vehicle}</span>
