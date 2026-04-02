@@ -818,11 +818,15 @@ if (window.location.search.includes('driver')) return <Driver />;
 const submitCancellation = async () => {
     setIsCancelling(true);
     
+    // Get the reason
     const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
+    
+    // Get the active order ID
     const orderId = localStorage.getItem('fst_active_order_id');
 
     if (orderId) {
       try {
+        // 1. Only change the status in Airtable
         await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
           method: 'PATCH',
           headers: {
@@ -836,27 +840,17 @@ const submitCancellation = async () => {
             }
           })
         });
-
-        // Safely update Fleet List memory to turn the badge gray
-        const savedList = localStorage.getItem('fst_orders_list');
-        if (savedList) {
-          let list = JSON.parse(savedList);
-          if (Array.isArray(list)) {
-            list = list.map(o => o.id === orderId ? { ...o, status: 'Canceled' } : o);
-            localStorage.setItem('fst_orders_list', JSON.stringify(list));
-          }
-        }
       } catch (error) {
         console.error("Airtable update failed:", error);
       }
     }
 
-    // 🚨 CLEANUP: Using your ACTUAL state variable to close the popup!
-    localStorage.removeItem('fst_active_order_id');
-    setOrderToCancel(null); 
+    // 2. Close the popup and stop the button loading animation
+    setShowCancelPopup(false);
     setIsCancelling(false);
     
-    window.location.reload();
+    // 🚨 NO PAGE RELOAD. NO MEMORY WIPING.
+    // Your 5-second tracker will automatically see the Airtable change and update the UI!
   };
 
   const availableDates = getAvailableDates();
