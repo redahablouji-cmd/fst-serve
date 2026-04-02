@@ -799,11 +799,23 @@ const submitCancellation = async () => {
     // Safely get the reason
     const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
     
-    // Safely get the ID without crashing the app
-    const orderId = localStorage.getItem('fst_active_order_id');
+    // 1. Load your new Fleet memory list
+    let currentOrders = [];
+    const savedList = localStorage.getItem('fst_orders_list');
+    if (savedList) {
+      currentOrders = JSON.parse(savedList);
+    }
+
+    // Safely get the ID (Checks old memory first, then the new list)
+    let orderId = localStorage.getItem('fst_active_order_id');
+    if (!orderId && currentOrders.length > 0) {
+      const activeOrder = currentOrders.find(o => !o.status.includes('Canceled'));
+      if (activeOrder) orderId = activeOrder.id;
+    }
 
     if (orderId) {
       try {
+        // 2. Patch Airtable
         await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
           method: 'PATCH',
           headers: {
@@ -817,17 +829,27 @@ const submitCancellation = async () => {
             }
           })
         });
+
+        // 3. 🚨 THE FIX: Update the memory list to "Canceled" so the UI moves it to History!
+        const updatedOrders = currentOrders.map(order => {
+           if (order.id === orderId) {
+              return { ...order, status: 'Canceled' }; // Instantly turns the badge gray
+           }
+           return order;
+        });
+        localStorage.setItem('fst_orders_list', JSON.stringify(updatedOrders));
+
       } catch (error) {
         console.error("Airtable update failed:", error);
       }
     }
 
-    // Safely clear the memory and close the popup
+    // Safely clear old variables and close the popup
     localStorage.removeItem('fst_active_order_id');
     setShowCancelPopup(false);
     setIsCancelling(false);
     
-    // Refresh the app to show the history
+    // 4. Refresh the app to show the updated History
     window.location.reload();
   };
 
