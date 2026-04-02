@@ -626,7 +626,18 @@ const MapControls = ({ userLocation, isDraggingMap }: { userLocation: { lat: num
 };
 
 // --- Main App ---
-
+// --- Re-added Date Generator to fix the White Screen ---
+const getAvailableDates = () => {
+  const dates = [];
+  const today = new Date();
+  // Generates the next 7 days for your scheduling UI
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    dates.push(date);
+  }
+  return dates;
+};
 export default function App() {
   // 🚨 SECRET DRIVER TERMINAL ROUTE
 if (window.location.search.includes('driver')) return <Driver />;
