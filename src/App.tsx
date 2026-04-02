@@ -796,41 +796,38 @@ if (window.location.search.includes('driver')) return <Driver />;
 const submitCancellation = async () => {
     setIsCancelling(true);
     
+    // Safely get the reason
     const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
     
-    // Grab the ID. Make sure 'fst_active_order_id' is exactly how you save it when ordering!
-    const orderId = activeOrder?.id || localStorage.getItem('fst_active_order_id');
+    // Safely get the ID without crashing the app
+    const orderId = localStorage.getItem('fst_active_order_id');
 
     if (orderId) {
-      await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          fields: {
-            "Status": "Canceled", // Spelled with one L to match your Airtable
-            "Reason": finalReason
-          }
-        })
-      }).then(async (response) => {
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Airtable blocked the update:", errorData);
-        }
-      }).catch((error) => console.error("Network error:", error));
-    } else {
-      console.error("CRITICAL: App does not know the order ID to cancel.");
+      try {
+        await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Orders/${orderId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: {
+              "Status": "Canceled", 
+              "Reason": finalReason
+            }
+          })
+        });
+      } catch (error) {
+        console.error("Airtable update failed:", error);
+      }
     }
 
-    // Clear app memory & close popup
+    // Safely clear the memory and close the popup
     localStorage.removeItem('fst_active_order_id');
-    if (typeof setActiveOrder === 'function') setActiveOrder(null);
     setShowCancelPopup(false);
     setIsCancelling(false);
     
-    // Refresh app to jump to home screen and drop it into History
+    // Refresh the app to show the history
     window.location.reload();
   };
 
