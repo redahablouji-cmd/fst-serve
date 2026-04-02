@@ -627,15 +627,25 @@ const MapControls = ({ userLocation, isDraggingMap }: { userLocation: { lat: num
 
 // --- Main App ---
 // --- Re-added Date Generator to fix the White Screen ---
+// --- FIXED Date Generator ---
 const getAvailableDates = () => {
   const dates = [];
   const today = new Date();
-  // Generates the next 7 days for your scheduling UI
+  
   for (let i = 0; i < 7; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
-    dates.push(date);
+    
+    // 🚨 THE FIX: Convert the raw Date object into readable text (e.g., "Thu, Apr 2")
+    const formattedDate = date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+    
+    dates.push(formattedDate);
   }
+  
   return dates;
 };
 // --- Real Time Generator (8:00 to 00:00, 30-min intervals) ---
