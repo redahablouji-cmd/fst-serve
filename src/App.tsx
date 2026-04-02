@@ -755,7 +755,7 @@ if (window.location.search.includes('driver')) return <Driver />;
 
       currentOrders.forEach((order, index) => {
          // Stop tracking if it is already canceled!
-         if (order.id && !order.status.includes('Canceled') && !order.status.includes('Annulé')) {
+         if (order && order.id && order.status && !order.status.includes('Canceled') && !order.status.includes('Annulé')) {
             fetch(`/api/track?id=${order.id}`)
               .then(res => res.json())
               .then(data => {
@@ -796,10 +796,7 @@ if (window.location.search.includes('driver')) return <Driver />;
 const submitCancellation = async () => {
     setIsCancelling(true);
     
-    // Safely get the reason
     const finalReason = cancelReason === "💬 Other..." ? customCancelText : cancelReason;
-    
-    // Safely get the ID
     const orderId = localStorage.getItem('fst_active_order_id');
 
     if (orderId) {
@@ -818,29 +815,25 @@ const submitCancellation = async () => {
           })
         });
 
-        // 🚨 INSTANT GRAY BADGE FIX (100% Crash-Proof)
-        // This safely updates the Fleet List memory so the History tab knows it's cancelled
+        // Safely update Fleet List memory to turn the badge gray
         const savedList = localStorage.getItem('fst_orders_list');
         if (savedList) {
           let list = JSON.parse(savedList);
-          // Only attempts to update if it's a valid list, preventing the white screen crash
           if (Array.isArray(list)) {
             list = list.map(o => o.id === orderId ? { ...o, status: 'Canceled' } : o);
             localStorage.setItem('fst_orders_list', JSON.stringify(list));
           }
         }
-
       } catch (error) {
         console.error("Airtable update failed:", error);
       }
     }
 
-    // Safely clear the memory and close the popup
+    // 🚨 CLEANUP: Using your ACTUAL state variable to close the popup!
     localStorage.removeItem('fst_active_order_id');
-    setShowCancelPopup(false);
+    setOrderToCancel(null); 
     setIsCancelling(false);
     
-    // Refresh the app to show the history
     window.location.reload();
   };
 
