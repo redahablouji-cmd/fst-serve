@@ -627,12 +627,12 @@ const MapControls = ({ userLocation, isDraggingMap }: { userLocation: { lat: num
 // --- Main App ---
 
 export default function App() {
-  const [isAppReady, setIsAppReady] = useState(false);
+  const [isAppReady, setIsAppReady] = (false);
   
 // --- PWA Install Logic ---
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [showIOSPrompt, setShowIOSPrompt] = useState(false); // Add this!
+  const [deferredPrompt, setDeferredPrompt] = <any>(null);
+  const [isInstalled, setIsInstalled] = (false);
+  const [showIOSPrompt, setShowIOSPrompt] = (false); // Add this!
 
   useEffect(() => {
     if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
@@ -693,25 +693,25 @@ export default function App() {
   };
   // -------------------------------
   
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = <Language>('en');
   const t = translations[language];
 
-  const [step, setStep] = useState<number>(1);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [step, setStep] = <number>(1);
+  const [isSettingsOpen, setIsSettingsOpen] = (false);
+  const [isSubmitting, setIsSubmitting] = (false);
   // Data State
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = (false);
   // --- 🚨 FLEET TRACKER STATE (Supports Multiple Orders) ---
-  const [activeOrders, setActiveOrders] = useState<any[]>([]);
+  const [activeOrders, setActiveOrders] = <any[]>([]);
   
   // Cancel Modal States
-  const [orderToCancel, setOrderToCancel] = useState<any>(null);
-  const [cancelReason, setCancelReason] = useState<string>("");
-  const [customCancelText, setCustomCancelText] = useState<string>("");
-  const [isCancelling, setIsCancelling] = useState(false);
+  const [orderToCancel, setOrderToCancel] = <any>(null);
+  const [cancelReason, setCancelReason] = <string>("");
+  const [customCancelText, setCustomCancelText] = <string>("");
+  const [isCancelling, setIsCancelling] = (false);
 
   // Success Screen State
-  const [showApproved, setShowApproved] = useState(false);
+  const [showApproved, setShowApproved] = (false);
 // --- 🚨 INVISIBLE ACCOUNT: Load user profile on startup ---
   useEffect(() => {
     try {
@@ -854,17 +854,17 @@ export default function App() {
   const availableTimes = getAvailableTimes();
   
   // 3. Update these existing state lines (or add them if missing)
-  const [selectedDate, setSelectedDate] = useState<string>(availableDates[0]);
-  const [selectedTime, setSelectedTime] = useState<string | null>(availableTimes[0]);
-  const [location, setLocation] = useState<string>('');
-  const [locationLabel, setLocationLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
-  const [locationNotes, setLocationNotes] = useState('');
+  const [selectedDate, setSelectedDate] = <string>(availableDates[0]);
+  const [selectedTime, setSelectedTime] = <string | null>(availableTimes[0]);
+  const [location, setLocation] = <string>('');
+  const [locationLabel, setLocationLabel] = <'Home' | 'Work' | 'Other'>('Home');
+  const [locationNotes, setLocationNotes] = ('');
   
   // NEW STATE: Tracks when the map is moving
-  const [isDraggingMap, setIsDraggingMap] = useState(false);
+  const [isDraggingMap, setIsDraggingMap] = (false);
   
   // Location Coordinates State
-  const [locationMode, setLocationMode] = useState<'gps' | 'map'>('gps');
+  const [locationMode, setLocationMode] = <'gps' | 'map'>('gps');
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null); 
   const [userGPSLocation, setUserGPSLocation] = useState<{ lat: number; lng: number } | null>(null); 
   const [isLocating, setIsLocating] = useState(false);
@@ -886,6 +886,9 @@ export default function App() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [plateNumber, setPlateNumber] = useState('');
+  const [savedPlates, setSavedPlates] = useState<string[]>([]);
+  const [showPlateDropdown, setShowPlateDropdown] = useState(false);
 // The Nuclear Wiper: Hard resets the entire app instantly
   const resetOrder = () => {
     window.location.reload(); 
@@ -912,7 +915,12 @@ export default function App() {
     }, 2500); 
     return () => clearTimeout(timer);
   }, []);
-
+useEffect(() => {
+    const storedPlates = localStorage.getItem('fst_saved_plates');
+    if (storedPlates) {
+      setSavedPlates(JSON.parse(storedPlates));
+    }
+  }, []);
   useEffect(() => {
     if (step === 2) {
       setIsLocating(true);
@@ -1003,6 +1011,7 @@ if (!customerName || !customerPhone) {
         name: customerName,
         phone: customerPhone,
         email: customerEmail,
+        plate: plateNumber,
         status: "🔴 Pending",
         date: strictDate,     // <--- Uses the strictDate calculated above!
         time_only: selectedTime,
@@ -1047,6 +1056,12 @@ if (!customerName || !customerPhone) {
           savedEmail: typeof customerEmail !== 'undefined' ? customerEmail : '' 
         };
         localStorage.setItem('fst_user_profile', JSON.stringify(userProfile));
+          // Save new plate to local storage for the next session
+  if (plateNumber && !savedPlates.includes(plateNumber)) {
+    const newSavedPlates = [...savedPlates, plateNumber];
+    setSavedPlates(newSavedPlates);
+    localStorage.setItem('fst_saved_plates', JSON.stringify(newSavedPlates));
+  }
         // 2. Trigger the "Approved" Popup!
         setShowApproved(true);
 
@@ -1775,6 +1790,39 @@ if (!customerName || !customerPhone) {
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 className="w-full p-4 rounded-xl border-2 border-transparent focus:border-[#B5F573] focus:bg-white bg-white outline-none transition-all font-medium text-[#1C1C1E]"
               />
+              {/* Smart License Plate Input */}
+          <div className="relative mt-4">
+            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wider">
+              License Plate (Optional)
+            </label>
+            <input
+              type="text"
+              value={plateNumber}
+              onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
+              onFocus={() => setShowPlateDropdown(true)}
+              onBlur={() => setTimeout(() => setShowPlateDropdown(false), 200)} 
+              placeholder="e.g. 12345 | A | 1"
+              className="w-full p-4 rounded-xl border-2 border-transparent focus:border-[#B5F573] focus:bg-white bg-white outline-none transition-all font-medium text-[#1C1C1E]"
+            />
+
+            {/* The Autocomplete Dropdown */}
+            {showPlateDropdown && savedPlates.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                {savedPlates.filter(p => p.includes(plateNumber)).map((plate, index) => (
+                  <div
+                    key={index}
+                    className="p-3 hover:bg-gray-50 cursor-pointer font-medium text-[#1C1C1E] border-b border-gray-100 last:border-0"
+                    onClick={() => {
+                      setPlateNumber(plate);
+                      setShowPlateDropdown(false);
+                    }}
+                  >
+                    {plate}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
             </div>
 
                   <div className="pt-6 border-t border-[#1C1C1E]/5 flex justify-between items-end">
