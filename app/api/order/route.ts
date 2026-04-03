@@ -29,6 +29,7 @@ export async function POST(request: Request) {
               "Status": body.status || "🔴 Pending",
               "Date": body.date, 
               "Time": body.time_only, // Make sure you added this column!
+              "Plate Number": body.plate,
               "Vehicle": body.vehicle,
               "Location": body.location,
               "Loc Notes": body.location_notes,
