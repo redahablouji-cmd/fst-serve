@@ -630,7 +630,7 @@ export default function App() {
   const [isAppReady, setIsAppReady] = (false);
   
 // --- PWA Install Logic ---
-const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+const [deferredPrompt, setDeferredPrompt] = useState(null);
 const [isInstalled, setIsInstalled] = useState(false);
 const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
