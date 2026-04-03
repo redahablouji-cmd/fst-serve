@@ -701,12 +701,12 @@ const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [isSubmitting, setIsSubmitting] = (false);
   // Data State
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  
   // --- 🚨 FLEET TRACKER STATE (Supports Multiple Orders) ---
   const [activeOrders, setActiveOrders] = useState([]);
   
   // Cancel Modal States
   const [orderToCancel, setOrderToCancel] = useState(null);
-  
   const [showApproved, setShowApproved] = useState(false);
 
   // --- 🚨 INVISIBLE ACCOUNT: Load user profile on startup ---
