@@ -630,9 +630,9 @@ export default function App() {
   const [isAppReady, setIsAppReady] = (false);
   
 // --- PWA Install Logic ---
-  const [deferredPrompt, setDeferredPrompt] = <any>(null);
-  const [isInstalled, setIsInstalled] = (false);
-  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+const [isInstalled, setIsInstalled] = useState(false);
+const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
   useEffect(() => {
     if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
