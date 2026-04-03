@@ -700,12 +700,12 @@ const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = (false);
   const [isSubmitting, setIsSubmitting] = (false);
   // Data State
-  const [showHistoryModal, setShowHistoryModal] = (false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   // --- 🚨 FLEET TRACKER STATE (Supports Multiple Orders) ---
-  const [activeOrders, setActiveOrders] = <any[]>([]);
+  const [activeOrders, setActiveOrders] = useState<any[]>([]);
   
   // Cancel Modal States
-  const [orderToCancel, setOrderToCancel] = <any>(null);
+  const [orderToCancel, setOrderToCancel] = useState<any>(null);
   const [cancelReason, setCancelReason] = <string>("");
   const [customCancelText, setCustomCancelText] = <string>("");
   const [isCancelling, setIsCancelling] = (false);
