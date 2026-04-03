@@ -786,7 +786,7 @@ const [showIOSPrompt, setShowIOSPrompt] = useState(false);
     }
     return status; // Default English
   };
-
+const [isCancelling, setIsCancelling] = useState(false);
   const submitCancellation = async () => {
     setIsCancelling(true);
     
