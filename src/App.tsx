@@ -710,7 +710,7 @@ const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [isCancelling, setIsCancelling] = (false);
 
   // Success Screen State
-  const [showApproved, setShowApproved] = (false);
+  const [showApproved, setShowApproved] = useState(false);
 // --- 🚨 INVISIBLE ACCOUNT: Load user profile on startup ---
   useEffect(() => {
     try {
