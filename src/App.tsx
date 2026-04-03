@@ -851,17 +851,17 @@ const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const availableTimes = getAvailableTimes();
   
   // 3. Update these existing state lines (or add them if missing)
-  const [selectedDate, setSelectedDate] = <string>(availableDates[0]);
-  const [selectedTime, setSelectedTime] = <string | null>(availableTimes[0]);
-  const [location, setLocation] = <string>('');
-  const [locationLabel, setLocationLabel] = <'Home' | 'Work' | 'Other'>('Home');
-  const [locationNotes, setLocationNotes] = ('');
+  const [selectedDate, setSelectedDate] = useState<string>(availableDates[0]);
+  const [selectedTime, setSelectedTime] = useState<string | null>(availableTimes[0]);
+  const [location, setLocation] = useState<string>('');
+  const [locationLabel, setLocationLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
+  const [locationNotes, setLocationNotes] = useState('');
   
   // NEW STATE: Tracks when the map is moving
-  const [isDraggingMap, setIsDraggingMap] = (false);
+  const [isDraggingMap, setIsDraggingMap] = useState(false);
   
   // Location Coordinates State
-  const [locationMode, setLocationMode] = <'gps' | 'map'>('gps');
+  const [locationMode, setLocationMode] = useState<'gps' | 'map'>('gps');
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null); 
   const [userGPSLocation, setUserGPSLocation] = useState<{ lat: number; lng: number } | null>(null); 
   const [isLocating, setIsLocating] = useState(false);
