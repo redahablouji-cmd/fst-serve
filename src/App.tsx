@@ -703,15 +703,13 @@ const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   // --- 🚨 FLEET TRACKER STATE (Supports Multiple Orders) ---
   const [activeOrders, setActiveOrders] = useState([]);
+  
   // Cancel Modal States
   const [orderToCancel, setOrderToCancel] = useState(null);
-  const [cancelReason, setCancelReason] = <string>("");
-  const [customCancelText, setCustomCancelText] = <string>("");
-  const [isCancelling, setIsCancelling] = (false);
-
-  // Success Screen State
+  
   const [showApproved, setShowApproved] = useState(false);
-// --- 🚨 INVISIBLE ACCOUNT: Load user profile on startup ---
+
+  // --- 🚨 INVISIBLE ACCOUNT: Load user profile on startup ---
   useEffect(() => {
     try {
       const savedProfile = localStorage.getItem('fst_user_profile');
