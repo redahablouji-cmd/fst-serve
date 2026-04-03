@@ -693,12 +693,12 @@ const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   };
   // -------------------------------
   
-  const [language, setLanguage] = <Language>('en');
+  const [language, setLanguage] = useState('en');
   const t = translations[language];
 
-  const [step, setStep] = <number>(1);
-  const [isSettingsOpen, setIsSettingsOpen] = (false);
-  const [isSubmitting, setIsSubmitting] = (false);
+  const [step, setStep] = useState(1);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // Data State
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   
